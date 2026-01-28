@@ -1,0 +1,56 @@
+\documentclass[12pt,a4paper]{tufte-handout}
+\usepackage{color} % for coloured text
+\usepackage{listings} % for code listings
+\usepackage{amsmath} % for math!
+\usepackage{graphicx} % for pictures...
+\usepackage{caption} % for margin figures
+\usepackage{hyperref} % links
+\usepackage{booktabs}
+\usepackage{import}
+\input{../../lectures/macros} % New commands
+\lstset{
+  language=matlab,
+  basicstyle=\ttfamily,
+  keywordstyle=\ttfamily
+}
+
+\title{Computational Tools for Modelling and Data Analysis: Classification}
+\date{November 16 2015}
+\author{Dr Iain Styles}
+\begin{document}
+
+\maketitle
+This exercise is due by 9am on Monday 23 November. Please submit your solution 
+through Canvas (Unit 6 assignment). Your submission should consist of:
+\begin{itemize}
+  \item A short report (less than two pages) containing your answers, including  any graphs, in PDF format.
+  \item All matlab files used to generate your results.
+\end{itemize}
+
+\section{Implementing a Quadratic Classifier}
+A new test for a disease is being developed. The test involves the measurement of the concentration of two chemicals in a urine sample. The test is less accurate than an existing blood test, but much faster and cheaper. In order to determine whether a test is ``positive'' or ``negative'', a classifier is desired that can make this decision.
+
+In order to train the classifier, measurements on 500 patients were taken and for each, both blood and urine tests were performed. The blood test was used to canonically determine the class of these training data, and from this initial labelling, the classifier is to be trained on the urine data. The following facts are known about the training data.
+\begin{asparaitem}
+  \item Only 5\% of patients recorded a positive blood test and are thus classified as having the disease.
+  \item The results of urine test are much more tightly grouped for the samples testing positive than for those testing negative.
+\end{asparaitem}
+
+Thus the two groups have unequal variance and a quadratic discriminant must be used. The datafile \texttt{unit6.mat} contains the discriminated training data in variables \texttt{diseased} and \texttt{healthy}, with one variable per row, one data point per column. Your task is to determine a quadratic classification rule on this data, and to use it to classify 1000 unclassified data points (in variable \texttt{newpts}), and thus ``diagnose'' the disease state of the individual from whom they came. 
+
+\begin{enumerate}
+  \item Compute the mean and covariance of the two training sets.\qmark{2}
+  \item Write an anonymous function to compute the classifier function, defined by equations 15--18 in the lecture notes.\qmark{3}
+  \item Evaluate the classifier against the new data points and determine the class of each (``diseased'' or ``healthy''.\qmark{2}
+  \item Visualise the results by plotting:
+    \begin{itemize}
+    \item ``Diseased'' training points as red x's.
+    \item ``Healthy'' training points as blue x's.
+    \item ``Diseased'' new points as red circles.
+    \item ``Healthy'' new points are blue circles.
+    \end{itemize}\qmark{2}
+  \item Comment on your results. What do you observe about the shape of the boundary between the two classes of points?\qmark{1}
+\end{enumerate}
+
+
+\end{document}

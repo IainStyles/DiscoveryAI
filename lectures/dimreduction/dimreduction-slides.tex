@@ -1,0 +1,293 @@
+\documentclass{beamer}
+\usetheme{Marburg}
+\usepackage{tikz}
+\usepackage{soul}
+\usepackage{tabularx}
+\usepackage{paralist}
+%\usepackage{listings}
+\usepackage{color} % for coloured text
+%\usepackage{listings} % for code listings
+\usepackage{amsmath} % for math!
+\usepackage{graphicx} % for pictures...
+%\usepackage{caption} % for margin figures
+\usepackage{hyperref} % links
+\usepackage{natbib}
+%\usepackage{booktabs}
+\usepackage{gensymb}
+\input{../macros} % New commands
+%\usepackage{framed}
+%\lstset{
+%  language=matlab,
+%  basicstyle=\ttfamily,
+%  keywordstyle=\ttfamily
+%}
+
+
+\title{06 22313 Computational Tools for Modelling and Analysis}
+\subtitle{Dimensionality Reduction}
+\author{Dr Iain Styles (I.B.Styles@bham.ac.uk)}
+\institute{School of Computer Science, University of Birmingham}
+\date{November 9 2015}
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}{Introduction}
+  \begin{itemize}
+    \item Many types of data are \textit{multivariate}:
+    \begin{itemize}
+      \item Fluorescence imaging at multiple wavelengths.
+      \item Mass spectrometry data.
+      \item DNA Microarray data.
+    \end{itemize}
+    \item Typically these datasets can have hundreds to millions of samples, of tens to hundreds of thousands of variables
+    \item Hard to visualise effectively
+    \item Two challenging cases:
+    \begin{itemize}
+      \item[1)] Large numbers of samples
+      \item[2)] Large numbers of variables
+    \end{itemize}
+    \item Focus here is on 2): high-dimensional data
+  \end{itemize}
+\end{frame}
+
+\section{The Curse of Dimensionality}
+
+\begin{frame}{Problems with high-dimensional data}
+  \begin{itemize}
+    \item Hard to visualise $>3$d
+      \begin{itemize}
+        \item Tricks involving colours and shapes
+        \item Spider diagrams
+      \end{itemize}
+    \item Computational cost.
+    \item \textbf{Geometric intuition fails disastrously}
+    \item Consider two ``hyper''-spheres, of radius $r$ and $r-\delta$
+    \item Volume of larger sphere $V_1 ~ r^d$
+    \item Volume of smaller sphere $V_2 ~ r^d - (r-\delta)^d$
+    \item Ratio of volumes:
+      \begin{equation}
+        \lim_{d\rightarrow \infty}\frac{r^d-(r-\delta)^d}{r^d}=1
+      \end{equation}
+
+    \item Volume concentrates around the edge!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The Curse of Dimensionality}
+  \begin{itemize}
+    \item Similar problems with distances in high dimensions
+    \item Consider the minimum and maximum distances between pairs of points
+    \item It can be proven that
+      \begin{equation}
+        \lim_{d \to \infty} E\left(\frac{\operatorname{dist}_{\max} (d) - \operatorname{dist}_{\min} (d)}{\operatorname{dist}_{\min} (d)}\right) 
+        \to 0
+      \end{equation}
+    \item That is, all pairwise distances converge
+    \item How on earth do we do clustering?!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Overcoming the curse}
+  \begin{itemize}
+    \item High-dimensional data is frequently ``redundant''
+    \item Some dimensions will only be ``noise''
+    \item Variables may be very strongly correlated
+    \item Often possible to find an alternative coordinate system that exposes this
+  \end{itemize}
+  \includegraphics[width=0.49\textwidth]{pcaex1}
+  \includegraphics[width=0.49\textwidth]{pcaex2}
+\end{frame}
+
+\section{Principal Component Analysis}
+
+\begin{frame}{Principal Component Analysis}
+  \begin{itemize}
+    \item PCA allows us to find a \textbf{transformation} that removes redundant dimensions in a dataset
+    \item Matches the coordinate system to the shape of the data such that:
+    \begin{itemize}
+      \item The first coordinate is aligned with the direction of greatest variation in the data.
+      \item The second coordinate is perpendicular to the first coordinate and aligned with the direction of greatest variation under that constraint,
+      \item Subsequent coordinates are perpendicular to all that have already been defined, aligned with the direction of greatest variation under that constraint.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Performing PCA}
+  \begin{itemize}
+    \item Covariance matrix, $\bSig$, describes the way different variables ``co-vary'':
+      \begin{equation*}
+        \Sigma_{ij} = \frac{1}{N-1}\sum_{n=1}^N \left(x_i^{(n)}-\bar x_i\right)\left(x_j^{(n)}-\bar x_j\right)
+      \end{equation*}
+      [$\bar x_i$ is the mean value of $x_i$.]
+    \item Easy to compute $\bSig$ if we organise our dataset in a sensible way:
+      \begin{itemize}
+        \item Construct matrix $\bX$ with components $X_{ij} = x_i^{(j)}$
+        \item Each \textit{row} of $\bX$ corresponds to a variable
+        \item Each \textit{column} corresponds to a sample
+        \item Compute the mean of every row and tile the resulting column vector side-by-side $N$ times $\rightarrow\bar\bX$.
+        \item Then, we form the covariance matrix as
+          \begin{equation}
+            \bSig = \frac{1}{N-1}\left(\bX-\bar\bX\right)\left(\bX-\bar\bX\right)^\rT = \tilde\bX\tilde\bX^\rT
+          \end{equation}
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Performing PCA}
+  \begin{itemize}
+    \item We will now find coordinate vectors that align with the covariance structure
+    \item Define matrix $\bT=\begin{pmatrix}\bt_1 & \bt_2 & \dots \bt_M\end{pmatrix}$
+    \item Columns of $\bT$ (the vectors $\bt$) represent  form a new coordinate system (basis) for the space.
+    \item Normalised such that $\bT^\rT\bT=\bI\leftrightarrow \bt_i\cdot\bt_j = \delta_{ij}$.
+    \item First we find the direction of greatest variance
+    \item Find the vector $\bt_1$ that maximises the variance of the projection of the data.
+    \begin{equation*}
+      \bt_1 =  \argmax_{\bt}\var(\bt^\rT\bX)
+    \end{equation*}
+    \item Now $\var(\bt^\rT\bX)=\bt^\rT\tilde\bX\tilde\bX^\rT\bt = \bt^\rT\bSig\bt$ ignoring the pre-factor $1/(N-1)$
+    \item Find $\bt=\bt_1$ that maximises this subject to $\bt^\rT\bt=1$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Performing PCA}
+  \begin{itemize}
+    \item Mathematical ``trick'': Lagrange multiplier
+    \item Subtract a ``multiple of zero'':
+      \begin{equation}
+        \bt_1 = \argmax _\bt \left[\bt^\rT\bSig\bt -\lambda_1(\bt^\rT\bt-1)\right]
+      \end{equation}
+    \item Differentiate this with respect to $\lambda$ and set to zero to maximise
+      \begin{equation}
+        \left(\bSig-\lambda_1\bI\right)\bt_1 = 0\quad\rightarrow\quad \bSig\bt_1 = \lambda_1\bt_1
+      \end{equation}
+    \item Solve ''\textit{eigenvalue}'' problem for largest $\lambda_1$ and accompanying $\bt_1$
+    \item $\bt_1$ is direction of greatest variation
+    \item $\bt_1^\rT\bSig\bt_1=\lambda_1\bt_1^\rT\bt_1 = \lambda_1$ is variance along that direction 
+    \item Next-greatest direction of variation is given by the second-largest eigenvalue/vector pair\dots
+  \end{itemize}
+  \begin{quote}
+    \textbf{The principal components of a dataset are the eigenvectors of the covariance metric, ordered by eigenvalue.}
+  \end{quote}
+\end{frame}
+
+\subsection{Using the Principal Components}
+\begin{frame}{}
+  \begin{itemize}
+    \item Once PCs have been found we transform the zero-mean data into the new coordinate system
+    \begin{equation}
+      \bX' = \bT^\rT\tilde\bX
+    \end{equation}
+    \item $\sqrt(\lambda_i)\bt_i$ are called the \textbf{loadings}. 
+    \item Columns of $\bX'$ are the \textbf{scores}: data projected onto the PC axes.
+    \item Note that $\bSig = \bT\bS\bT^\rT$ where $\bS=\diag(\lambda_1,\lambda_2,\dots,\lambda_n)$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Reducing dimensionality with PCA}
+  \begin{itemize}
+    \item Projection of data onto loadings allows us to remove non-varying dimensions.
+    \item Useful to consider the ``total variance'' $V_\rT = \sum_i \lambda_i$.
+    \item Compute proportion of total variance along each PC by computing $\lambda_i/V_\rT$. 
+    \item Determine how many PCs describe the majority of the variance. 
+    \item Decide which ones to remove
+    \item Set components of data in those dimensions to zero or equivalently, remove the corresponding columns form $\bT$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{PCA Workflow} 
+  The application of PCA to a dataset will thus typically follow the following workflow:
+  \begin{itemize}
+    \item[1)] Form the zero-mean matrix $\tilde \bX$.
+    \item[2)] Calculate the covariance matrix $\bSig$
+    \item[3)] Calculate the eigenvalues/vectors of $\bSig$
+    \item[4)] Sort the eigenvalues/eigenvectors from largest to smallest by eigenvalue.
+    \item[5)] Choose a proportion of variance to retain and discard the eigenvalues/vectors for non-varying dimensions.
+    \item[6)] Compute the scores by projecting the data onto the new coordinates.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{When to use PCA}
+  \begin{itemize}
+    \item Often as part of the pre-processing workflow 
+    \item Relationships between points are preserved 
+    \item Dimensionality is reduced so distances now a useful discriminator
+    \item Common to use PCA to reduce data size and dimensionality prior to clustering
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Data Normalisation and Variable Scaling}
+  \begin{itemize}
+    \item In some multivariate datasets, variables are of a different type or on a different scale
+    \item Useful to consider mapping all variables onto a common scale to avoid bias
+    \item Most common: rescale all variables to have unit variance.
+    \item Take care when using of PCA in such a situation.
+  \end{itemize}
+\end{frame}
+
+\section{Alternatives to PCA}
+
+\begin{frame}{Random Projection}
+  \begin{itemize}
+    \item Covariance matrix is computationally very expensive
+    \item Have to pull some tricks for very large numbers of variables
+    \item A deceptively simple but powerful alternative is the random projection
+    \item Coordinate system is chosen at random
+    \item Given a dataset $\bX_{m\times n}$ of $m$ variable from $n$ samples, form a random matrix $\bR_{m\times k}$ where each column is a normalised random vector:
+      \begin{equation}
+        \bR=\begin{pmatrix}\br^{(1)} & \br^{(2)} & \dots & \br^{(k)}\end{pmatrix}
+      \end{equation}
+      where ${\br^{(i)}}^\rT\br^{(i)} = 1$.
+    \item Then in the new coordinates the scores are
+      \begin{equation}
+        \bX' = \bR^\rT\bX,
+      \end{equation}
+    \item Unlike PCA, there is no natural metric (variance) to decide how many projections are necessary.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Random Projection}
+  \begin{itemize}
+    \item Surprisingly effective for dimensionality reduction
+    \item Key mathematical result: Johnson-Lindenstrauss lemma
+    \item Related to ``concentration of measure'' phenomena. 
+    \item Popular for several important reasons.
+    \begin{itemize}
+      \item They are very inexpensive to compute.
+      \item For very high-dimensional data, random vectors are very likely to be orthogonal.
+      \item It can be shown that they preserve certain important distance metricss.
+    \end{itemize}
+    \item Often worth trying due to the extreme low cost
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Non-linear dimensionality reduction}
+  \begin{itemize}
+    \item PCA and random projections are purely linear transformations of the data
+    \item Do not change the ``shape'' of a cloud of datapointsF
+    \item Effective for finding and removing globally non-varying directions in a dataset
+    \item Not suited for finding finer structure in a dataset
+    \item Popular alternative are:
+    \begin{itemize}
+      \item Self-organising maps
+      \item Curvilinear component analysis
+      \item Latent variable models
+      \item t-distributed stochastic neighbour embedding (t-SNE -- my personal favourite).
+    \end{itemize}
+    \item Often use linear methods as pre-processing to eliminate globally redundant dimensions 
+    \item Then use a non-linear method or clustering to sort out the subleties.
+  \end{itemize}
+\end{frame}
+
+\end{document}
+
+

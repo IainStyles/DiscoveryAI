@@ -1,0 +1,172 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage{multicol}
+\input{../lectures/macros}
+\begin{document}
+    \title{Discovery AI}
+    \subtitle{Signature Discovery}
+    \author{Professor Iain Styles (i.styles@qub.ac.uk)}
+    \institute{School of EEECS, QUB}
+    \date{November 9 2015}
+
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}{Signatures?}
+    \begin{itemize}
+        \item What do we mean when we talk about “signatures”? \pause
+        \item A factor or set of factors that define or identify some (biological) phenomenon
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Signatures vs Biomarkers}
+    \begin{columns}[t]
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Biomarkers}
+                \begin{itemize}
+                    \item Biomarkers are objective and measurable
+                    \item Usually corresponding to single factors (a gene, molecule etc)
+                    \item Predictive or diagnostic power
+                    \item Established causal link, well characterised values under normal conditions
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Signatures}
+                \begin{itemize}
+                    \item Signatures can represent combinations of factors
+                    \item Not always directly measurable
+                    \item Not always informed by causal links
+                    \item Not always selected for predictive/diagnostic ability
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Examples of Signatures}
+\end{frame}
+
+\begin{frame}{How will we approach this?}
+    \begin{itemize}
+        \item ``A factor or set of factors that define or identify some (biological) phenomenon''
+        \item Factors $\implies$ variables
+        \item Signature: pattern of/relationship between variables
+        \item Signature discovery: process for identifying those patterns
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Two Distinct Scenarios}
+    \begin{columns}[t]
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Supervised}
+                The phenomena we are looking to identify signatures for are known, and some samples are "labelled"
+            \end{block}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{block}{Unsupervised}
+                The phenomena we are looking to identify signatures for are \textbf{not} known, \textbf{and/or} and no samples are "labelled"
+            \end{block}
+        \end{column}
+
+    \end{columns}
+\end{frame}
+
+\section{Multivariate Data}
+
+\begin{frame}{Multivariate Data}
+    \begin{columns}[t]
+        \begin{column}{0.5\textwidth}
+            \begin{itemize}
+                \item Each sample is represented by a collection of numbers
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            INSERT PICTURE OF POINT CLOUD
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Examples of Multivariate Data}
+    \begin{multicols}{2}
+        Examples of a colour image
+        Example of a mass spectrum
+
+        Example of gene array data
+        Example of RNASeq
+    \end{multicols}
+    \pause
+    \textbf{What are the variables?}
+\end{frame}
+
+\begin{frame}{Variance}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{itemize}
+                \item A single random variable $X$ is often characterised by its expected value (mean) $\mu=\rE(x)$, and its variance.
+                \item Variance characterises the range of possible value that $X$ can take and is defined as
+            \end{itemize}
+            \begin{equation*}
+                \var(X) = \sigma^2 = \sum_{i=1}^N \left(X_i - \mu\right)^2
+            \end{equation*}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \includegraphics[width=0.5\textwidth]{../lectures/intro/gaussian}
+        \end{column}
+        ADD SAMPLE PLOT
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Covariance}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{itemize}
+                \item A single random variable $X$ is often characterised by its expected value (mean) $\mu=\rE(x)$, and its variance.
+                \item Variance characterises the range of possible value that $X$ can take and is defined as
+            \end{itemize}
+            \begin{equation*}
+                \var(X) = \sigma^2 = \sum_{i=1}^N \left(X_i - \mu\right)^2
+            \end{equation*}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            PLOT 2D GAUSSIAN AND SAMPLE PLOT
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Considerations}
+    \begin{itemize}
+        \item Scales matter when calculating statistical patterns
+        \item Height in metres vs mm; mass in tonnes or ng
+        \item It is common to normalise variables to have the same scale \pause
+        \begin{itemize}
+            \item Same min/max if bounded
+            \item Same variance if unbound
+            \item Other approaches exist
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\section{Principal Component Analysis}
+
+\begin{frame}{Principal Component Analysis}
+    \begin{itemize}
+        \item Multivariate
+    \end{itemize}
+\end{frame}
+
+
+\section{Non-Negative Matrix Factorisation}
+
+\section{Classification}
+
+\section{Clustering}
+
+\end{document}

@@ -1,0 +1,366 @@
+\documentclass[12pt,a4paper]{tufte-handout}
+\usepackage{color} % for coloured text
+\usepackage{listings} % for code listings
+\usepackage{amsmath} % for math!
+\usepackage{graphicx} % for pictures...
+\usepackage{caption} % for margin figures
+\usepackage{hyperref} % links
+\usepackage{booktabs}
+\input{../macros} % New commands
+\usepackage{framed}
+\lstset{
+  language=matlab,
+  basicstyle=\ttfamily,
+  keywordstyle=\ttfamily
+}
+
+\setcounter{secnumdepth}{2}
+\title{Computational Tools for Modelling and Analysis: Fitting Models to Data}
+\author{Dr Iain Styles}
+
+
+\date{\today}
+
+\begin{document}
+%\Large\sffamily
+\maketitle
+\section{Introduction}
+
+Scientists often try to understand their experimental results in terms of a mathematical model of the experiment. Such models typically have some ``free parameters'' that need to be found for each experiment, and which tell us something about the behaviour and properties of the experimental system. For example, if we are measuring the position of some cells or particles moving along a narrow linear channel in a time-lapse experiment, we could model their motion by $s=ut+\frac{1}{2}at^2$, where the unknowns are $u$, the initial velocity and $a$, the acceleration. The question we address here is how to calculate these free parameters to maximise the model--data correspondence. 
+\
+We will consider three particular cases:
+\begin{asparaitem}
+  \item Linear models: $y=mx+c$, $s=ut+\frac{1}{2}at^2$ (note: this is linear in the \textit{unknowns}).
+  \item Linear models with measurement error.
+  \item Nonlinear models: $y=a+b\sin(cx)$, $y=axe^{-a^2x}$
+\end{asparaitem}
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=0.9\textwidth]{possiblefits}
+  \end{center}
+  \caption{A set of data points together with three possible lines can could be used to model them. These notes describe how to find the optimal line to model the points.}
+  \label{fig:possiblefits}
+\end{figure}
+
+\section{Least squares Fitting}
+A fundamental concept in model fitting that the ``least-squares error'', which provides a way of quantifying the difference between a set of data points and a mathematical model. Imagine we have a set of data points $\mathcal{D}$ consisting of $n$ $(x,y)$ pairs, where $x$ is some experimental condition (e.g. time, concentration, voltage) and $y$ is the measured quantity:
+\begin{equation}
+  \mathcal{D} = \{(x_1,y_1),\dots,(x_n,y_n)\}
+\end{equation}
+
+Let our modelling function be defined as
+\begin{equation}
+  y = f(\bp,x)
+\end{equation}
+where $\bp=(p_1,\dots,p_m)$ is a vector of unknown parameters\sidenote{For example, a straight line model $y=mx+c$ has $\bp=(m,c)$.}. At each value of $x$, the difference between the model $f$ and the measurements is a function of $\bp$ and is called the \textbf{residual}:
+\begin{equation}
+  r_i(\bp) = y_i-f(\bp,x_i).\label{eq:genres}
+\end{equation}
+The \textit{least squares error} is then defined as
+\begin{equation}
+  e(\bp) = \sum_{i=1}^{n}r_i^2 = \br^\rT\br
+\end{equation}
+and our fitting problem amounts to finding the value of $\bp=\bp^*$ that minimised the error:
+\begin{equation}
+  \bp^* = \argmin_\bp e(\bp)\label{eq:pstar}
+\end{equation}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\textwidth]{residuals}
+  \end{center}
+  \caption{The residuals (as marked on the diagram) are the differences between a particular model and the set of data points.}
+  \label{fig:residuals}
+\end{figure}
+
+
+\section{Linear Models}
+The simplest case is that of models that are linear in the unknown parameters. Straight lines, $f(\bp,x) = p_1x+p_2$ are a linear model, but in general we consider models of the form
+\begin{equation}
+  f(\bp,x) = p_1f_1(x)+\dots+p_mf_m(x) = \sum_{j=1}^m p_j f_j(x) \label{eq:linmodel}
+\end{equation}
+and the residuals are therefore
+\begin{equation}
+  r(\bp,x_i) = y_i - \sum_{j=1}^m p_j f_j(x_i)
+\end{equation}
+
+The $f_i$ can be any function of $x$, but there cannot be any unknowns therein. Treating $\bp$ as a column vector and defining the component of $\bF$ as $F_{ij}=f_j(x_i)$ we can re-write this as the matrix equation
+\begin{equation}
+   \br = \by-\bF\bp
+\end{equation}
+where $\by=\left(y_1,\dots,y_n\right)$. As an example consider a simple quadratic model $f(\bp,x)= p_1x^2+p_2x+p_3$. Each row of $\bF$ corresponds to a data point, whilst each column corresponds to a term in the model:
+
+\begin{equation}
+  \begin{pmatrix}
+    r_1 \\ r_2 \\ \vdots \\ r_n
+  \end{pmatrix}
+  =
+  \begin{pmatrix}
+    y_1 \\ y_2 \\ \vdots \\ y_n
+  \end{pmatrix}
+  -
+  \begin{pmatrix}
+    x_1^2 & x_1 & 1 \\
+    x_2^2 & x_2 & 1 \\
+    &\vdots &\\
+    x_n^2 & x_n & 1 \\
+  \end{pmatrix}
+  \begin{pmatrix}
+    p_1 \\ p_2 \\ p_3
+  \end{pmatrix}.
+\end{equation}
+
+In Matlab, we can form the matrix $F$ in this case as
+\begin{lstlisting}
+  F = [x.^2, x, x.^0];
+\end{lstlisting}
+
+Our least-squares error can therefore be written
+\begin{equation}
+  e(\bp) = \left(\by-\bF\bp\right)^\rT \left(\by-\bF\bp\right)
+\end{equation}
+
+\section{Finding the Best Fit}
+The solution to our problem of finding the parameters of ``best fit'' requires us to find the value of $\bp=\bp^*$ that minimised $e(\bp)$. To find the solution, we find the minimum by differentiating with respect to $\bp$ and setting the result to zero:
+\begin{equation}
+  \bF^\rT\by-\bF^\rT\bF\bp^*=0,
+\end{equation}
+a set of simultaneous linear equation that we could either solve by direct inversion:
+\begin{equation}
+  \bp^* = \inv{\left(\bF^\rT\bF\right)}\bF^\rT\by;
+\end{equation}
+or in Matlab using Gaussian elimination through the \texttt{\textbackslash} operator:
+\begin{lstlisting}
+  pstar = (F'*F)\(F'*y)
+\end{lstlisting}
+At this point you may be tempted to ask the following question: we have modelled our data as $\by=\bF\bp$, so why not just solve this directly? There are two reasons:
+\begin{asparaitem}
+  \item The calculations we have done guarantee the specific solution we will obtain (the least square solution) and we are not at the whim of the solver.
+  \item In the next section we will want to incorporate some extra information into the calculation which we must add directly into $e(\bp)$.
+\end{asparaitem}
+
+\section{Weighted Linear Least Squares}
+
+Our analysis so far has assumed that for every value of $x$, we have one value of $y$, and we want to fit a model to those single points. This will frequently not be the case as many experiments will be repeated multiple times. Clearly we can straightforwardly fit models to the ``average'' of a set of points (be that the mean or the median), but is this the right thing to do? The particular issue we are concerned with is how to account for the spread (variance) in the data in the fitting process.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=\textwidth]{weighted}
+  \end{center}
+  \caption{A set of data points with error bars and a line of best fit. This line could be chosen by treating all points equally, or by preferentially weighting those that are known most precisely.}
+  \label{fig:weighted}
+\end{figure}
+
+If a data point has a small variance, then we can usually assume that its value has been determined quite precisely by the measurement, and therefore we would want any model to fit that point accurately. If the variance is large though, we know the value much less precisely, and perhaps a less precise fit is necessary at that point. To include this consideration in the fitting procedure, we need to modify the way in which we calculate the error. So far, we have ``weighted'' all residuals equally in $e(\bp)$, but it is straightforward to add an additional weighting term. Na\"ively we would write
+\begin{equation}
+  e(\bp) = \sum_{i=1}^n w_ir_i^2
+\end{equation}
+where the $w_i$ weight contributions from the different residuals. We will define $w_i=1/\var(y_i)$ such that terms with a small variance are more heavily weighted in the error function than those with a large variance.
+
+It will turn out to be mathematically more convenient if we define the following matrix:
+
+\begin{equation}
+  \bSig = \begin{pmatrix}
+\var(y_1) & 0 \dots & \dots & 0 \\
+0 & \var(y_2) & 0 \dots & 0 \\
+\vdots & & \ddots & \vdots \\
+0 & \dots & 0 & \var(y_n)
+\end{pmatrix}.
+\end{equation}
+
+\sidenote{This is a special case of the \textbf{covariance matrix} that we will meet again in later parts of the course.}
+
+This allows us to write the error as
+\begin{eqnarray}
+  e(\bp) &=& \br^\rT \inv{\bSig} \br\\
+  &=& \left(\by-\bF\bp\right)^\rT \inv{\bSig} \left(\by-\bF\bp\right)
+\end{eqnarray}
+where we note that $\inv{\bSig}$ requires only the diagonal elements to be inverted to ensure $\inv{\bSig}\bSig =\bI$.
+
+We perform a similar analysis (differentiate and set to zero to find the minimum in the error) as in the unweighted case to obtain the final result
+\begin{equation}
+  \bF^\rT\inv{\bSig}\by-\bF^\rT\inv{\bSig}\bF\bp^*=0,
+\end{equation}
+which can be solved using the methods we have already established.
+
+\section{Fitting Nonlinear Models}
+
+The analysis to date is restricted only to models that ca be expressed in the form given in Eq.~\eqref{eq:linmodel}, but there may be many cases where this is not possible (eg. $y(x) = a\sin bx$). We still have a desire to minimise the sum of the squares of the residuals, but we cannot use the linearity of the fitting function to enable a single-step solution. We must formulate a process that instead of solving Eq.~\eqref{eq:pstar} to find the value of $\bp$ that minimises the error, finds a set of parameters that simply reduces the error. We will do this iteratively until no further reduction in error is possible.
+
+We will proceed by examining the behaviour of the error when we change $\bp$ by a small amount. This we do by approximating the function as a straight line over a small region using \textit{Taylor's Theorem}:
+\begin{eqnarray}
+  f(x_i,\bp+\bdp) &\approx& f(x_i,\bp) + \sum_{j=1}^m \frac{\partial f(x_i)}{\partial p_j}\Delta p_j\\
+  &=& f(x_i,\bp) + \sum_{j=1}^m J_{ij}\delta p_j
+\end{eqnarray}
+and the residual after the change is
+\begin{equation}
+  \br(\bp+\bdp) = \by - \bf(\bp) -\bJ\bdp
+\end{equation}
+where $f_i(\bp) = f(x_i,\bp)$. The error is therefore
+\begin{equation}
+  e(\bp+\bdp) = \left(\by - \bf(\bp) -\bJ\bdp\right)^\rT\left(\by - \bf(\bp) -\bJ\bdp\right).
+\end{equation}
+ By minimising this quantity, we find the \textit{change} in $\bp$ that gives us the largest reduction in the error. We differentiate as before and set to zero:
+\begin{equation}
+  \left(\bJ^\rT\bJ\right)\bdp^* = \bJ^\rT\left(\by-\bf(\bp)\right)
+\end{equation}
+which we know how to solve.
+
+It is common practice to make a small modification to this:
+\begin{equation}
+  \left(\bJ^\rT\bJ+\lambda\diag(\bJ^\rT\bJ)\right)\bdp^* = \bJ^\rT\left(\by-\bf(\bp)\right)
+\end{equation}
+
+Without this modification, the parameter vector will change quickly along directions with steep gradients, but only slowly along shallow gradients. The additional term increases movement along shallow gradients and thus leads to a faster convergence. The amount of increase is controlled by the damping factor $\lambda$ which is modified iteratively to give the best results. The full algorithm, named after its inventors Levenberg and Marquadt is described in Algorithm~\ref{alg:levmar}.
+
+\begin{algorithm2e}[t]
+%  \caption{The Levenberg-Marquadt Algorithm}\label{alg:levmar}
+%  \begin{algorithmic}[1]
+  \SetLine
+
+  \SetKwComment{com}{\% }{}
+  \KwData{Data $\bx,\by$; Initial parameter guess $\bp_0$; Function $f(x,\bp)$; Jacobian $Jac(x,\bp)$; initial values of $\lambda, \nu$.}
+  \KwResult{$\bp,e(\bp)$, parameters that minimmise the least squares error, the error.}
+  \com{Evaluate the error at the initial parameter value}
+  $\bp\gets\bp_0$\; 
+  $e\gets(\by-f(x,\bp)^\rT(\by-f(x,\bp)$\;
+  \com{Iterate until convergence}
+  $Converged\gets False$\;
+  \While{$Converged==False$}{
+    \com{Calculate the Jacobian}
+    $J\gets Jac(x,\bp)$\;
+    \com{Calculate update for different values of $\lambda$ until we improve the error}
+    $LambdaSet\gets false$\;
+    \While{LambdaSet==false}{
+      \com{Calculate $\Delta\bp$ for $\lambda=\lambda_0$ and $\lambda=\lambda_0/\nu$}
+      $\Delta_1 =   \left(\bJ^\rT\bJ+\lambda\diag(\bJ^\rT\bJ)\right) \setminus \bJ^\rT\left(\by-\bf(\bp)\right)$\;
+      $\Delta_2 =   \left(\bJ^\rT\bJ+(\lambda/\nu)\diag(\bJ^\rT\bJ)\right) \setminus \bJ^\rT\left(\by-\bf(\bp)\right)$\;
+      \com{Calculate the error at the new parameter values}
+      $e_1\gets(\by-f(x,\bp+\Delta_1)^\rT(\by-f(x,\bp)$\;
+      $e_2\gets(\by-f(x,\bp+\Delta_2)^\rT(\by-f(x,\bp)$\;
+      \uIf{$e_1<e$}{
+        \com{Set new values of $\bp$ and $e$, storing old value as $e'$}
+        $\bp\gets\bp+\Delta_1$\;
+        $e'\gets e$\;
+        $e\gets e_1$\;
+        \com{Current $\lambda$ is OK}
+        $LambdaSet\gets true$\;
+      }
+      \uElseIf{$e_2<e$}{
+        \com{Set new values of $\bp$ and $e$, storing old value as $e'$}
+        $\bp\gets\bp+\Delta_2$\;
+        $e'\gets e$\;
+        $e\gets e_2$\;
+        $\lambda\gets\lambda/\nu$\;
+        \com{Current $\lambda$ is OK}
+        $LambdaSet\gets true$\;
+      }
+      \uElse{
+        $\lambda\gets\lambda/\times nu$\;
+      }
+    }
+    \If{$e'/e<TerminationCriterion$}{
+      $Converged \gets true$
+    }
+  }
+  \caption{The Levenberg-Marquadt Algorithm.}
+  \label{alg:levmar}
+\end{algorithm2e}
+
+\section{Some New Matlab Constructions}
+
+\subsection{Concatenating Matrices}
+In an earlier example, we formed
+\begin{lstlisting}
+  F = [x.^2, x, x.^0];
+\end{lstlisting}
+As \texttt{x} is a column vector, and the operators are element-wise, Matlab knows to expand this for each row of \texttt{x}, and so this provides a nice shorthand for forming the matrices for the fitting problems we have studied in this section. We could also have written:
+
+\begin{lstlisting}
+  F = []; % Create an empty matrix
+  F = [x.^0, F] % Concatenate x.^0 with the empty matrix
+  F = [x.^1, F] % Concatenate x with F
+  F = [x.^2, F] % Concatenate x.^2 with F
+\end{lstlisting}
+
+\subsection{Some other useful matrix functions}
+\begin{lstlisting}
+  y = reshape(x,nr,nc) % reshape x to be nr * nc, result to y
+  [nr,nc] = size(x) % Get the size of x: nr(ows), nc(olumns)
+  x = ones(nr,nc) % Create a matrix of all ones with nr rows and nc columns
+  x = zeros(nr,nc) % Create a matrix of all zeros with nr rows and nc columns
+  X = diag(x) % Given vector x create matrix X with x on its diagonal
+  x = diag(X) % Given matrix X extract its diagonal into vector x
+\end{lstlisting}
+
+\subsection{The \texttt{for} loop}
+Used to repeat a set of commands a fixed number of times.
+\begin{lstlisting}
+  for i=1:N
+    % Do stuff
+  end
+\end{lstlisting}
+
+For example, add up the numbers from 1 to 10:
+\begin{lstlisting}
+  x=0;
+  for i=1:10
+    x=x+i
+  end
+\end{lstlisting}
+
+\subsection{The \texttt{while} loop}
+Used to repeat a set of commands until some condition is met.
+\begin{lstlisting}
+  while(condition_is_true)
+    % Do stuff
+  end
+\end{lstlisting}
+For example, add up the numbers from 1 to 10 (you wouldn't normally use this type of loop for this):
+\begin{lstlisting}
+  i=0;
+  x=0;
+  while(i<=10)
+    i=i+1
+    x=x+i
+  end
+\end{lstlisting}
+
+\subsection{\texttt{if-else-elseif} Statements}
+These are used to perform different actions under different conditions:
+\begin{lstlisting}
+  if(condition A is true)
+    % Do X
+  elseif(condition B is true) % ONLY IF CONDITION A IS FALSE
+    % Do Y
+  else % ONLY IF CONDITION A AND CONDITION B ARE BOTH FALSE
+    % Do Z
+  end
+\end{lstlisting}
+
+There can be one and only one \texttt{if}, one and only one \texttt{end}, up to one \texttt{else} and as many \texttt{elseif} as required.
+
+\subsection{Functions}
+We have already used some simple mathematical functions such as \texttt{sin}, and it is possible to create our own. In Matlab, functions must be in separate files that must be named after them. For example, the following function must be placed on its own in a separate file called \texttt{createFMatrix.m}:
+\begin{lstlisting}
+  [F] = function createFMatrix(x)
+     F = [x.^2, x, x.^0];
+  end
+\end{lstlisting}
+
+and we can then call \texttt{F = createFMatrix(x)} in the main code.
+
+This provide a mechanism for creating \textbf{reuseable code}.
+
+If we only want to create and use a fairly simple function within our current script, we can create a so-called \textit{anonymous function}:
+
+\begin{lstlisting}
+  createFMatrix = @(x) [x.^2, x, x.^0];
+\end{lstlisting}
+
+In Matlab, function are, in the computer science jargon, \textit{first class citizens}, and so they can be passed around as arguments to other functions. This is extremely useful, and you will see an example of this in the exercises.
+
+\end{document}
+
+

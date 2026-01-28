@@ -1,0 +1,79 @@
+\documentclass[12pt,a4paper]{tufte-handout}
+\usepackage{color} % for coloured text
+\usepackage{listings} % for code listings
+\usepackage{amsmath} % for math!
+\usepackage{graphicx} % for pictures...
+\usepackage{caption} % for margin figures
+\usepackage{hyperref} % links
+\usepackage{booktabs}
+\usepackage{import}
+\input{../../notes/macros} % New commands
+\lstset{
+  language=matlab,
+  basicstyle=\ttfamily,
+  keywordstyle=\ttfamily
+}
+
+\title{Computational Tools for Modelling and Data Analysis: Clustering Exercises}
+\date{November 17 2014}
+\author{Dr Iain Styles}
+\begin{document}
+
+\maketitle
+This exercise is due by 9am on Monday 24 November. Please submit your solution 
+through Canvas (Unit 2 assignment). Your submission should consist of:
+\begin{itemize}
+  \item A short report (less than two pages) containing your answers, including  any graphs, in PDF format with filename \texttt{yourstudentid.pdf} (e.g \texttt{123456.pdf})
+  \item All matlab files used to generate your results. There must be a single main file \texttt{a<yourstudentid>.m} that when run in Matlab, should generate all of your results. Add comments to indicate what each section of code is doing.
+  \item If your submission does not meet these guidlines, you will be awarded zero for the assignment.
+\end{itemize}
+
+\section{Exploring Clustering [10 marks]}
+
+\begin{enumerate}
+  \item A common use of clustering is to spatially ``segment'' image data, that is, to identify pixels that are spatially similar. In this exercise you will investigate the effect of different distance functions (similarity measures) and normalisation strategies on the performace of a cluatering algorithm. To begin, you will need to:
+
+    \begin{enumerate}
+      \item Load in the data file \texttt{unit4.mat}, which is the same dataset that was used in the dimensionality reduction exercise.
+      \item Define anonymous functions that take two column vectors as input and compute the euclidean and cosine distances between the vectors respectively.
+    \end{enumerate}
+
+    For different combinations of distance measure, number of clusters and normalisation strategy:
+    \begin{itemize}
+      \item Perform $k$-means using the supplied code \texttt{kmeans.m}
+      \item Plot the results using the supplied function\texttt{plotClusterImages.m}
+    \end{itemize}
+
+    For example, to run kmeans with 7 clusters and the cosine distance (defined as an anonymous function \texttt{dcos}), use:
+   \begin{lstlisting}
+     [cmean,ClusterIndex]=kmeans(X,7,dcos);
+     plotClusterImages(ClusterIndex,nRows,nCols);
+   \end{lstlisting}
+
+    In your investigations I suggest you try:
+    \begin{itemize}
+      \item Different distances function (cosine, euclidean)
+      \item Normalisation of samples (sum-of-squares, sum of components)
+      \item Different numbers of clusters
+      \item Using PCA to reduce the dimensionality before clustering (cluster on the PCA scores).
+    \end{itemize}
+    
+    The challenge is: how well can you segment the data?
+
+   \textit{\textbf{[Warning: $k$-means uses a random initialisation which means that it does not always give the same result. I suggest you run each clustering several times.]}}
+\end{enumerate}
+      
+
+%\ifx \NotSolution\undefined
+%\subsection*{Solution}
+%The calculations that need to be performed are self-explanatory from the questions. With regard to the interpretation, the data is really 3d as the eigenvalues of the covariance matric drop rapidly (1.2, 0.014, 0.0016, 0.0007)$\times 10^9$ after this (one could even argue for 2d). PCA is able to separate cells with RFP from cells with GFP very effectively (corresponding to the first 2 PCs, as seen from the images). From the 3d data, one can see distinct clusters corresponding to particular regions. The following code will perform all of the above tasks
+
+%\lstlisting{fluoropca.m}
+%\begin{center}
+%\includegraphics{PC1}
+%\includegraphics{PC2}
+%\end{center}
+%\fi
+
+
+\end{document}

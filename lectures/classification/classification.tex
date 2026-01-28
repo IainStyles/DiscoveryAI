@@ -1,0 +1,220 @@
+\documentclass[12pt,a4paper]{tufte-handout}
+\usepackage{color} % for coloured text
+\usepackage{listings} % for code listings
+\usepackage{amsmath} % for math!
+\usepackage{graphicx} % for pictures...
+\usepackage{caption} % for margin figures
+\usepackage{hyperref} % links
+\usepackage{booktabs}
+\usepackage{gensymb}
+\input{../macros} % New commands
+\usepackage{framed}
+\lstset{
+  language=matlab,
+  basicstyle=\ttfamily,
+  keywordstyle=\ttfamily
+}
+
+\setcounter{secnumdepth}{2}
+\title{Computational Tools for Modelling and Analysis: Classification}
+\author{Dr Iain Styles}
+
+\date{\today}
+
+\begin{document}
+%\Large\sffamily
+\maketitle
+\section{Introduction}
+In the section on clustering, we formulated some methods that enable us to identify ``groups'' of points within a dataset. This was done in an ``unsupervised'' manner, and it is not necessarily true that the resulting groups will be internally homogeneous (all the points of the same type), or that a well-define physical/chemical/biological meaning or origin (e.g ``healhy'' and ``sick'' clusters) can be ascribed to each group. In this section we will study a related but distinct class of methods: \textit{classifiers}. Classification is typically done in a supervised manner and the aim is to use the information contained within a dataset to construct a classification rule that divides the data into distinct groups that correspond to some \textbf{predefined} \textit{classes} of data.
+
+The basic idea is:
+\begin{itemize}
+  \item Given a set of data points, label them to divide them into pre-determined classes.
+  \item Construct a \textit{classification rule} as some combination of the input variables that separates the predefined classes as much as possible: \textbf{Discrimination}.
+  \item Use the classifier to \textit{predict} the class of new unlabelled data points: \textbf{Classification}.
+\end{itemize}
+
+\begin{marginfigure}
+  \includegraphics[width=\textwidth]{binaryclass}
+  \caption{A simple binary classification between two sets of pre-labelled data points.}
+  \label{fig:binaryclass}
+\end{marginfigure}
+
+One of the crucial differences between classification and clustering that the classification requires a set of pre-classified \textit{training data} in order to construct the classification rule: this is a \textit{supervised} procedure as opposed to the unsupervised nature of clustering techniques. In principal at least, the initial labelling of the training data should reflect the true classes of the data which is not necessarily true of the unsupervised clustering methods.
+
+Many type of classification algorithms exist: we will focus on one of the simplest, which forms classification rules from linear combinations of input variables, \textbf{linear discriminant analysis}. Our discussion will follow that of \citet{izenman2008modern}.
+
+\section{Conditional Probability}
+We will treat this as a statistical problem, making liberal use of \textbf{Bayes' theorem}:
+
+\begin{equation}
+  P(a|b) = P(b|a)P(a)/P(b)
+\end{equation}
+
+\begin{itemize}
+  \item $P(a|b)$ is the probability of $a$ being true, given that $b$ is already true.
+  \item $P(b|a)$ is the probability of $b$ being true, given that $a$ is already true.
+  \item $P(a)$ and $P(b)$ are the probabilities of $a$ and $b$ being true, irrespective of prior knowledge.
+\end{itemize}
+
+To see how this works, let's consider an example. We have a chemical ``assay'' (a test) that determines the presence of a particular chemical in a sample. We know the following about the assay:
+\begin{itemize}
+  \item It has a \textbf{sensitivity} (true positive rate) of 90\%, that is, if a sample contains the chemical, there is a 90\% chance of the test being positive.
+  \item It has a \textbf{specificity} (true negative rate) of 80\%, that is, if a sample does not contain the chemical, there is an 80\% chance of the test being negative.
+  \item It is \textbf{expected (prior knowledge)} that 10\% of samples contain the chemical.
+\end{itemize}
+
+Given this information, what can we infer from the result of the test? First, we need to cast our knowledge in the correct probabilistic language. Letting $T$ be the test and $S$ the sample we have:
+\begin{eqnarray*}
+  \mbox{Sensitivity of 90\%}\, &\mapsto&\, P(+T|+S) = 0.9\, \mbox{and hence}\, P(-T|+S)=0.1\\
+  \mbox{Specificity of 80\%}\, &\mapsto&\, P(-T|-S) = 0.8\, \mbox{and hence}\, P(+T|-S)=0.2\\
+  \mbox{Prior knowledge}\, &\mapsto&\, P(+S) = 0.1\, \mbox{and hence}\, P(-S)=0.9
+\end{eqnarray*}
+where we have noted that a sample must always give a positive or negative test result and that probabilities must sum to one. Let us now ask a question about the test:
+
+\textit{What is the probability that a sample contains the chemical given a positive test result?}
+
+i.e. we want $P(+S|+T)$. From Bayes' theorem:
+
+\begin{equation*}
+  P(+S|+T) = P(+T|+S)P(+S)/P(+T)
+\end{equation*}
+We will need to know the probability of a positive test, $P(+T)$. This can be calculated by realising that a positive test can arise in two ways: a false positive if the sample is negative, or a true positive if the sample is positive:
+\begin{equation*}
+  P(+T) = P(+T|+S)P(+S)+P(+T|-S)P(-S) = (0.9\times0.1)+(0.2\times 0.9) = 0.27
+\end{equation*}
+and similarly
+\begin{equation*}
+  P(-T) = 0.73.
+\end{equation*}
+
+Substituting the numbers we find that
+\begin{equation*}
+  P(+S|+T) = 0.9\times0.1/0.27 = 0.333
+\end{equation*}
+and similarly
+\begin{eqnarray*}
+  P(+S|-T) &=& 0.1\times0.1/0.73 = 0.014\\
+  P(-S|+T) &=& 0.2\times0.9/0.27 = 0.667\\
+  P(-S|-T) &=& 0.9\times0.9/0.73 = 0.986
+\end{eqnarray*}
+
+What is the implication of these calculations? If a test is negative, we can be fairly sure (98.6\%) that the sample does not contain the chemical. However, if the test is positive, it is twice as likely that the sample will be negative than positive. Given the high sensitivity of the test, this might seem rather suprising, but to predict the outcome of the test we must take into account how many samples are likely to be positive: only 10\%. It is in this case much more likely that a positive test result is a false positive, simply because there are so many more samples that don't contain the chemical.
+
+\section{Linear Discriminant Analysis}
+
+We are now going to consider how to apply Bayesian statistics to the problem of classification, and we will begin by considering the simplest case: find a linear binary classifier. That is, a linear combination of variables--a straight line--that best discriminates between two pre-defined groups of points
+
+We are going to make some assumptions about the statistical properties of the data, then given the relative probabilities of a point being in each of the groups, we are going to determine which one a new point is most likely to belong to, and hence classify it.
+
+First we define our \textbf{prior knowledge} of the data: we define prior probabilities
+\begin{equation}
+  P(\bx\in\Pi_i) = \pi_i
+\end{equation}
+that express the probability that a randomly selected observation $\bx$ is in class $\Pi_i$. Then, given that an observation is in a class, we define the conditional probability
+\begin{equation}
+  P(\bx|\Pi_i)=f_i(\bx)
+\end{equation}
+Using Bayes' theorem, we can calculate the \textit{posterior} probability $P(\Pi_i|\bx)$, that is, the probability that a given point $\bx$ belongs to class $\Pi_i$. For a two-class model we have
+\begin{eqnarray}
+  P(\Pi_i|\bx)  &=& \frac{P(\bx|\Pi_i)P(\Pi_i)}{P(\bx)}\\
+&=& \frac{f_i(\bx)\pi_i}{f_1(\bx)\pi_1+f_2(\bx)\pi_2}
+\end{eqnarray}
+So, if we know the distributions of the groups, and the probability of any point being in each of the groups, then we can compute the probability of a specific point being in each of the groups, and assign the point to the class to which it belongs with the highest probability. That is,
+\begin{equation}
+  \frac{P(\Pi_1|\bx)}{P(\Pi_2|\bx)}>1 \,\mapsto\, \bx\in\Pi_1
+\end{equation}
+otherwise $\bx\in\Pi_2$. Re-expressing in terms of $f$ and $\pi$ we find that $\bx$ belongs to $\Pi_1$ if
+\begin{equation}
+  \frac{f_1(\bx)}{f_2(\bx)}>\frac{\pi_2}{\pi_1}\label{eq:classratio}
+\end{equation}
+otherwise to $\Pi_2$. If the ratios are equal, then randomly (and with equal probability) assign the point to either class.
+
+In order to implement this, we either need to know or to assume something about the properties of our classes. We will assume the following for a simple two-class binary classifier:
+
+\begin{itemize}
+  \item Each data point belongs to exactly one of exactly two distinct and identifiable groups, $\Pi_1$ and $\Pi_2$
+  \item The two groups are normally distributed with different means $\bar\bx_1$ and $\bar\bx_2$ but identical covariances $\bSig$.
+\end{itemize}
+
+Thus, for $n=\{1,2\}$ the groups are distributed as:
+\begin{equation}
+  P(\bx|\Pi_n)=f_n(\bx) = \frac{1}{(2\pi)^{r/2}\abs{\bSig}^{1/2}}\exp{(-\frac{1}{2}(\bx-\bar\bx_n)^\rT\bSig^{-1}(\bx-\bar\bx_n))}
+\end{equation}
+
+We will now derive a rule that maximally separates the two groups. First, consider the ratio of the two probability distributions:
+
+\begin{equation}
+  \log_e\frac{f_1(\bx)}{f_2(\bx)} = \left(\bar\bx_1-\bar\bx_2\right)^\rT\bSig^{-1}\bx -\frac{1}{2}\left(\bar\bx_1-\bar\bx_2\right)^\rT\bSig^{-1}\left(\bar\bx_1+\bar\bx_2\right)\label{eq:logp1p2}
+\end{equation}
+
+The second term on the RHS of this equation is independent of $\bx$ and we rewrite
+\begin{equation}
+  \left(\bar\bx_1-\bar\bx_2\right)^\rT\bSig^{-1}\left(\bar\bx_1+\bar\bx_2\right)  =\bar\bx_1^\rT\bSig^{-1}\bar\bx_1 - \bar\bx_2^\rT\bSig^{-1}\bar\bx_2
+\end{equation}
+ 
+We note that modifying Eq.~\eqref{eq:logp1p2} slightly we have
+\begin{equation}
+  L(\bx) = \log_e\frac{f_1(\bx)\pi_1}{f_2(\bx)\pi_2} = \bm^\rT\bx+c,\label{eq:lindisc}
+\end{equation}
+which is linear in $\bx$ and has ``gradient''
+\begin{equation}
+  \bm=\bSig^{-1} \left(\bar\bx_1-\bar\bx_2\right)\label{eq:classbdy}
+\end{equation}
+and ``intercept''
+\begin{equation}
+  c = -\frac{1}{2}\left(\bar\bx_1^\rT\bSig^{-1}\bar\bx_1 - \bar\bx_2^\rT\bSig^{-1}\bar\bx_2\right)+\log_e\frac{\pi_1}{\pi_2}
+\end{equation}
+
+Finally, we  observe, by reference to Eq.~\eqref{eq:classratio} that
+
+\begin{equation}
+  \mbox{if}\,L(\bx)>0\,\mbox{assign $\bx$ to $\Pi_1$}
+\end{equation}
+else assign $\bx$ to $\Pi_2$. The ``straight line'' defined by Eq.~\eqref{eq:classbdy} defines a boundary between the classes.
+
+The particular form of LDA we have introduced here is \textit{Gaussian LDA}, and the  the function $\bm^\rT\bx$ is referred to as \textit{Fisher's linear discriminant function}.
+
+If the covariances of the classes are not equal, then a somewhat more complex analysis is required. If the covariances of the two groups are given by $\bSig_1$ and $\bSig_2$ then the discriminant function (Eq.~\eqref{eq:lindisc}) becomes
+
+\begin{equation}
+  Q(\bx) = \bx^\rT\bA\bx + \bb^\rT\bx + c
+\end{equation}
+
+with
+\begin{eqnarray}
+  \bA &=& -\frac{1}{2}\left(\bSig_1^{-1}-\bSig_2^{-1}\right) \\
+  \bb &=& \bSig^{-1}_1\bar\bx_1 - \bSig^{-1}_2\bar\bx_2 \\
+  c &=& -\frac{1}{2}\left(\log_e\frac{\abs{\bSig_1}}{\abs{\bSig_2}}+\bar\bx_1^\rT\bSig_1^{-1}\bar\bx_1-\bar\bx_2^\rT\bSig_2^{-1}\bar\bx_2\right)-\log_e\frac{\pi_1}{\pi_2}
+\end{eqnarray}
+
+with the classification rule being
+\begin{equation}
+  \mbox{if}\,Q(\bx)>0\,\mbox{assign $\bx$ to $\Pi_1$}
+\end{equation}
+else assign $\bx$ to $\Pi_2$. This is known as the \textit{Quadratic discriminant}.
+
+We can also generalise our argument to multiclass (non-binary) LDA, although the algebra is significantly more complex. The general argument is that we compute the pairwise relative probabilities as before and form the discriminant
+\begin{equation}
+  L_{ij}(\bx) = \log_e\left(\frac{P(\Pi_i|\bx)}{P(\Pi_j|\bx}\right)=\log_e\left(\frac{f_i(\bx)\pi_i}{f_j(\bx)\pi_j}\right)
+\end{equation}
+and then $\bx$ is assigned to $\Pi_i$ if $L_{IJ}>0$ for all $j\neq i$. From this it follows from the earlier argument that the discriminant function is 
+\begin{equation}
+    L_{ij}(\bx) =\bm^\rT_{ij}\bx+c_{ij}
+\end{equation}
+with 
+\begin{eqnarray}
+  \bm_{ij} &=& \left(\bar\bx_i-\bar\bx_j\right)^\rT\bSig^{-1}\, \mbox{and}\\
+  c_{ij}&=&-\frac{1}{2}\left(\bar\bx_i^\rT\bSig^{-1}\bar\bx_i - \bar\bx_j^\rT\bSig^{-1}\bar\bx_j\right)+\log_e\frac{\pi_i}{\pi_j}.
+\end{eqnarray}
+
+\section{Classification vs Clustering}
+At this point one may be tempted to wonder why, given that LDA just linearly partitions space, one cannot just perform $k$-means clustering. The answer lies in the incorporation of the prior probabilities $\pi_i$. In $k-$means the partitioning of space is based solely on the positions of the means of the clusters, with the boundaries given by the perpendicular bisectors of the lines joining the cluster means. The positions of the boundaries take no account of the relative sizes of the cluster and will be in the same place regardless of whether the cluster contain the same number of data points, or one contains ten times as many points as the other. In classification, our probabilistic view of the problem is that if a point is exactly halfway between the means of two clusters, then it is more likely to belong to the larger cluster and should be classified as thus. The term $\log_e(\pi_1/\pi_2)$ in the constant term of the boundary equation reflects this, shifting the boundary towards the \textit{smaller} cluster. Clustering and classification are two different problems and should be treated as such.
+
+\bibliographystyle{dinat}
+\bibliography{Papers}
+
+
+
+
+\end{document}

@@ -1,0 +1,341 @@
+\documentclass[12pt,a4paper]{tufte-handout}
+\usepackage{color} % for coloured text
+\usepackage{listings} % for code listings
+\usepackage{amsmath} % for math!
+\usepackage{graphicx} % for pictures...
+\usepackage{caption} % for margin figures
+\usepackage{hyperref} % links
+\usepackage{booktabs}
+\input{../macros} % New commands
+\usepackage{framed}
+\lstset{
+  language=matlab,
+  basicstyle=\ttfamily,
+  keywordstyle=\ttfamily
+}
+
+\setcounter{secnumdepth}{2}
+\title{Computational Tools for Modelling and Analysis: Introduction and Mathematical Preliminaries}
+\author{Dr Iain Styles}
+
+
+\date{\today}
+
+\begin{document}
+%\Large\sffamily
+\maketitle
+\section{Introduction}
+
+This course will introduce you to a range of problems in the analysis of data and some of the techniques and tools that you could use to address them. Data analysis is a huge field and there are many methods in s commonly available oftware packages and many times more to be found in the literature so it will not be possible for us to cover anything other than a tiny fraction of what is available. However, we will be able to survey the area to identify some broad classes of problem and some specific techniques for their solution. Most importantly, you will get an understanding of what it is possible to do with a dataset, and how you might extract some meaningful information from it. Alongside this, you will get to put these ideas into practice by writing some fairly simple computer programs in Matlab.
+
+We will cover the following broad topics in this course:
+
+\begin{enumerate}
+  \item Mathematical Essentials: Linear Algebra and Basic Frequentist Statistics
+    
+    \textit{Some basic mathematical concepts that will be drawn upon throughout the course.}
+    
+  \item Fitting Models to Data
+
+    \textit{Given a parameterised mathematical model of a dataset, how do you find the ``best'' parameters? Examples: calculate rates of chemical reactions from measured data; Determining fluorophore concentrations from emission data.}
+
+  \item Image Reconstruction and Inverse Problems
+
+    \textit{Image formation in 3d projective systems. Example: computed tomography.}
+
+  \item Dimensionality Reduction
+
+    \textit{Identifying and removing dependencies between variables. Examples: denoising signals, finding correlations, identifying distinct signal sources.}
+
+  \item Classification
+
+    \textit{Given a set of data divided into groups, how do you decide which group to allocate a new data point to? Example: classifying quantitative test results as ``positive'' or ``negative'', }
+
+  \item Clustering
+
+    \textit{Identifying ``groups in a dataset. Example: how many distinguishable type of cell are there in a sample?}
+
+  \item Image Segmentation
+
+    \textit{Detecting and delineating objects in an image. Example: delineating a tumour in an MRI  image.}
+
+  \item Image Registration
+
+    \textit{Aligning images (perhaps of different types) to each other. Example: combining an ultrasound image with an MRI.}
+
+  \item Tracking
+
+    \textit{Identifying moving features in an image and mapping their trajectories. Example: studying the rate of endocytosis by cells.}
+
+\end{enumerate}
+
+A substantial proportion of the course is devoted to image analysis. We make no apology for this, imaging is a core tool is all parts of biology and is a source of rich and complex data: from time-lapse images of plant root growth to whole-body MRI, images \textit{are} data and should be treated as such.
+
+There will, by necessity, be a significant amount of mathematics. This is unavoidable but we will take considerable care to make sure that both intuition and formality are developed alongside each other. To be a truly effective data analyst, one must have both of these qualities.
+
+\section{Recommended Texts}
+
+The recommended text for this course is
+\begin{itemize}
+  \item \textit{Modern Multivariate Statistics}, Alan Julian Izenman, 1st Edition, Springer (2008).
+\end{itemize}
+
+This book contains far more material than we will cover but is very clearly presented and accessible, with lots of interesting examples.
+
+\section{Mathematical Essentials}
+
+\subsection{Linear Algebra}
+
+Consider the following set of simultaneous linear equations:
+
+\begin{eqnarray}
+  2x-y &=& 3 \label{sima}\\
+  x+y &=&3 \label{simb}
+\end{eqnarray}
+
+The solution to these is easy to guess, but procedurally we do the following: add eq.\eqref{sima} to eq.\eqref{simb} gives
+\begin{equation}
+  3x=6
+\end{equation}
+and therefore $x=2$ and by substitution $y=1$.
+
+Simple sets of linear equations such as these can be solved via such ad-hoc approaches, but if we have a more complex system involving many more equations and unknown variables then calculations can quickly become unwieldy and a more systematic approach is preferred. \textbf{Linear algebra} comprises a set of rules and techniques that allow us to solve linear equations efficiently and compactly.
+
+You should all be familiar with the basic concept of a \textbf{vector}, which is an ordered list of numbers that represents a position in some ``vector space'' with respect to a set of basis vectors. The simplest example of this is our use of $(x,y)$ coordinate pairs to describe a position on the plane, but there are many less intuitive examples. The vector may represent a \textbf{measurement} such as an image, or some set of properties of the object that is being measured.
+
+Using this object-measurement paradigm, let us define a vector $\bx$ that represents the unknowns in our set of linear equations such that
+\begin{equation}
+  \bx = \begin{pmatrix}x\\y\end{pmatrix}
+\end{equation}
+This is our ``object''. The constants on the right hand side of our linear equations are our ``measurements''. We define
+\begin{equation}
+  \bb = \begin{pmatrix}3\\3\end{pmatrix}
+\end{equation}
+The coefficients of $x$ and $y$ in our linear equations represent the \textit{measurement process}. The rules of linear algebra allow us to represent these as a \textbf{matrix}:
+\begin{equation}
+  \bA = \begin{pmatrix}2&-1\\1&1\end{pmatrix}
+\end{equation}
+
+such that 
+\begin{equation}
+  \bA\bx=\bb
+\end{equation}
+
+or, expanding things in full,
+
+\begin{equation}
+  \begin{pmatrix}
+    2 & -1 \\ 1 & 1
+  \end{pmatrix}
+  \begin{pmatrix}
+    x \\ y
+  \end{pmatrix}
+  =
+  \begin{pmatrix}
+    3 \\ 3
+  \end{pmatrix}
+\end{equation}
+
+The implied multiplication of $\bA$ and $\bx$ is acheived by taking the scalar (dot) product of each row of $\bA$ with each column of $\bx$ (here, $\bx$ has only one column, but the argument generalises to the case that $\bx$ is a matrix). Note that this means that the number of columns in $\bA$ must be the same as the number of rows in $\bx$.
+
+One intuitive way of thinking about this is that $\bA$ represents some operation that transforms $\bx$ into $\bb$. A geometric example of this would be a rotation. Since such a transformation is well-defined it can be reversed, and so there should exist another transformation that ``undoes'' that encoded in $\bA$. We will write this as $\inv{\bA}$ and this has the property that
+\begin{equation}
+  \inv{\bA}\bA\bx = \bx
+\end{equation}
+$\inv{\bA}$ is known as the \textbf{inverse} of $\bA$ and has the properties that
+\begin{equation}
+  \inv{\bA}\bA=\bI
+\end{equation}
+where $\bI$ is the \textbf{identity matrix}:
+\begin{equation}
+  \bI = \begin{pmatrix}1 & 0 \\0 & 1\end{pmatrix}
+\end{equation}
+Thus, if we can calculate $\inv{\bA}$ then we can solve our linear equations:
+\begin{equation}
+  \bA\bx=\bb \quad\mapsto\quad \inv{\bA}\bA\bx=\inv{\bA}\bb \quad\mapsto\quad \bx = \inv{\bA}\bb
+\end{equation}
+
+There are well-established procedures for calculating matrix inverses which we will not dwell on here (rather, we just assume it can be done -- we will find out how soon). For our purposes, we note that
+\begin{equation}
+  \inv{\bA} = \frac{1}{3}\begin{pmatrix}1&1\\-1&2\end{pmatrix}
+\end{equation}
+and thus the solution to the equations is
+\begin{equation}
+\bx = \inv{\bA}\bb = \frac{1}{3}\begin{pmatrix}1&1\\-1&2\end{pmatrix}\begin{pmatrix}3\\3\end{pmatrix} = \begin{pmatrix}2\\1\end{pmatrix}
+\end{equation}
+
+  In Matlab, matrices are created using combinations of square brackets to denote the start and end, commas (or spaces) to denote columns, and semi-colons to denote rows.
+  \begin{lstlisting}
+    A = [2,-1;1,1] % Create matrix A
+    b = [3;3] % Create vector b
+    invA = inv(A) % Compute the inverse of A
+    x = invA*b % Calculate x
+  \end{lstlisting}
+
+  Note that Matlab prints the result of each operation. You can suppress this by adding a semicolon to the end of each statement. The \texttt{\%} character is used as a comment character: everything on the line after this is ignored. The command \texttt{invA = inv(A)} calls a built-in function called \textit{inv} that takes a matrix argument and returns its inverse. The \textit{operator} * is used to denote matrix multiplication in matlab, and is also used for regular scalar multiplication.
+
+The example we have just worked through is a simple case where the solution to the simultaneous equations can be found exactly. In real-world problems, this is rarely the case. The specific features of this example that enable an exact solutions are that
+\begin{enumerate}
+  \item The number of unknowns is equal to the number of equations.
+  \item The equations (row of $\bA$) are linearly independent.
+\end{enumerate}
+
+If these conditions are not met then an exact solution cannot be found (or multiple solutions exist). For example, consider the following modified form of our original equations:
+
+\begin{eqnarray}
+  2x-y+z &=& 3\\
+  x+y-z &=&3
+\end{eqnarray}
+
+Adding these together we get $x=2$, but then we are left with $z=y-1$ and no way to solve this. These equations are solved by any point on the straightline $z=y-1$, and there is a choice to be made. These equations are said to be \textbf{underdetermined}: there is not enough information available to determine the solution.
+
+Alternatively, consider
+\begin{eqnarray}
+  2x-y &=& 3\\
+  x+y &=&3\\
+  x-y &=&0 
+\end{eqnarray}
+Taking the second and third equations we have $x=y=3/2$, but these do not solve the first equation. This problem is \textbf{overdetermined} and somehow one has to find a compromise solution.
+
+  For these problems, we cannot calculate a matrix inverse: it does not exist for non-square matrices as we have in over/under-determined problems. Instead, we must use a different type of procedure that finds a solution with certain specified properties. In Matlab, we can use the ``\'' operator: for the underdetermined case:
+  \begin{lstlisting}
+    A = [2,-1,1;1,1,-1]
+    b = [3;3]
+    x = A\b
+  \end{lstlisting}
+
+  It is not simple to determine exactly which solution this will give you in cases where more than one is possible as it depends on the properties of $\bA$. For underdetermined systems, where the solution is exact but non-unique, the solution returned may be either the solution with the shortest length, or the sparsest solution. For overdetermined systems, it is usually the solution that minimises $\abs{\bA\bx-\bb}^2$.
+
+\section{Random Variables}
+
+A variable that is said to be random is one that is subject to some degree of nondeterminism. For example, the arrival time of a bus/train is subject to a certain amount of error. The same is true of scientific measurements: the measurement of a true value is affected by many factors such as thermal effects, vibration, etc. The properties of this random variable are characterised by its \textbf{probability density function} (PDF) which describes how the possible values of the variable are distributed. For example, the frequency of randomly occurring independent events is described by the \textit{Poisson} distribution. The \textit{Gaussian}, or \textit{normal} distribution describes many common physical and statistical processes, especially those involving large numbers of independent random variables; its close relation the log-normal distribution describes how exponentials of Gaussian random variables are distributed.
+
+An example of a very common PDF, the normal distribution is shown in Figure~\ref{fig:pdf}. As with all PDFs, this describes the probability that a value drawn from it will lie in a certain range. Concretely, the area under any portion of this curve bounded by two values of $x$ is the probability that a values drawn from that distribution will like between those two values. We write that the probability that $x$ is in interval $[x_1,x_2]$ is given by  $\int_{x_1}^{x_2}p(x)\mathrm{d}x$. Note that this implies that the area under the whole curve must be one.
+ \begin{figure}[h]
+   \begin{center}
+     \includegraphics[width=0.7\textwidth]{distribution}
+     \caption{A example of a probability density function, in this case a normal distribution (Gaussian).}
+     \label{fig:pdf}
+   \end{center}
+  \end{figure}
+
+Given a collection of $N$ numerical values ${x_1, x_2,\dots, x_N}$, drawn from a distribution, there are a few defining quantities that it is common to compute:
+  \begin{itemize}
+    \item Arithmetic mean: $\bar x = \frac{1}{N}\sum_{i=1}^N x_i$
+    \item Median: sort the values in order from lowest to highest, median is the ``middle'' value, or the mean of the middle pair if $N$ is even.
+    \item Mode: the most commonly occurring value.
+    \item Variance: $\mbox{var}(x)=\sum_{i=1}^N \left(\bar x -x_i\right)^2$
+    \item Standard deviation: $\sigma(x)=\sqrt{\mbox{var}(x)}$
+  \end{itemize}
+
+  In Matlab, we would normally represent our collection of values as a vector. We can then use the built-in functions to calculate the average:
+  \begin{lstlisting}
+    xmean = mean(x)
+    xmedian = median(x)
+    xmode = mode(x)
+    stdev = std(x)
+    variance = var(x)
+\end{lstlisting}
+
+Although it is extraordinarily common to compute these quantities, many people do so without any regard as to what the underlying distribution is. A look at two common distributions shows us why this might be a problem (Figure~\ref{fig:pdfaverages}): the averages are not necessarily the same and which one you should calculate depends on what question you are asking of your data.
+
+\begin{figure*}
+  \begin{minipage}[t]{0.5\textwidth}
+    \begin{center}
+      \includegraphics[width=0.7\textwidth]{normalaverages}
+      \begin{eqnarray*}
+        p(x) &=& \frac{1}{\sigma\sqrt{2\pi}}\ e^{-\frac{\left(x-\mu\right)^2}{2\sigma^2}}\\
+        \mbox{Mean}&:& \mu\\
+        \mbox{Median}&:& \mu\\
+        \mbox{Mode}&:& \mu
+      \end{eqnarray*}
+    \end{center}
+  \end{minipage}
+  \begin{minipage}[t]{0.5\textwidth}
+    \begin{center}
+      \includegraphics[width=0.7\textwidth]{lognormalaverages}
+      \begin{eqnarray*}
+        p(x) &=& \frac{1}{x\sigma\sqrt{2\pi}}\ e^{-\frac{\left(\ln x-\mu\right)^2}{2\sigma^2}}\\
+        \mbox{Mean}&:& e^{\mu+\sigma^2/2}\\
+        \mbox{Median}&:& e^\mu\\
+        \mbox{Mode}&:& e^{\mu-\sigma^2}
+      \end{eqnarray*}
+    \end{center}
+  \end{minipage}
+  \caption{The three types of average for (left) the normal distribution; and (right) the log-normal distribution.}
+  \label{fig:pdfaverages}
+\end{figure*}
+
+
+\section{Plottiing Simple Graphs in Matlab}
+As well as providing a large library of numerical and scientific computing algorithms, Matlab provides sophisticated and flexible visualisation tools. We will start with a very simple example and plot $y=x^2$. Matlab cannot plot an equation symbolically: we must explicitly calculate all the quantities that we want to plot. We start by creating some values of $x$ -- uniformly spaced between $-5$ and $5$ in steps of 0.01. In Matlab, this is easy to do:
+\begin{lstlisting}
+  x = [-5:0.01:5]
+\end{lstlisting}
+Note that this creates a \textit{row} vector. We could create a column vector by \textit{transposing} this by adding a \texttt{'} at the end of the expression, but for this it doesn't matter. We now need to calculate the corresponding values of $y$. Na\"ively we may write
+\begin{lstlisting}
+  y = x*x
+\end{lstlisting}
+or equivalently
+\begin{lstlisting}
+  y = x^2
+\end{lstlisting}
+but if you try this you will find that you get an error message. This is because $*$ means matrix multiplication which we don't want. Instead, we want to do an element-wise operation which we can do using
+\begin{lstlisting}
+  y = x.*x
+\end{lstlisting}
+or equivalently
+\begin{lstlisting}
+  y = x.^2
+\end{lstlisting}
+We can now plot the graph. In Matlab, this is a simple as
+\begin{lstlisting}
+  plot(x,y)
+\end{lstlisting}
+If you are going to plot multiple graphs then take note that a new plot will overwrite an old one unless you explicitly do one of two things. You can either create a new figure window to put the new graph in:
+\begin{lstlisting}
+  figure()
+\end{lstlisting}
+or instruct Matlab to plot the new figure on the existing figure without overwriting what is already there by ``holding'' the current figure:
+\begin{lstlisting}
+  hold on
+\end{lstlisting}
+
+The final Matlab command that we will introduce today is the most important of all:
+\begin{lstlisting}
+  help
+\end{lstlisting}
+This can be used to find out about specific commands, for example:
+\begin{lstlisting}
+  help plot
+\end{lstlisting}
+
+It is important to learn how to use the help effectively!
+
+\section{Summary of some useful Matlab constructs}
+
+\begin{lstlisting}
+  A = [1,2,3;4,5,6] % Create a matrix/vector
+  size(A)
+  x = A(2,3) % x = 2nd row, 3rd column of A
+  x = A(:,2) % x = 2nd column of A
+  x = A(1,:) % x = 1st row of A
+  invA = inv(A) % Compute the inverse of matrix A (which must be square)
+  x = A\b % Solve linear system Ax=b for x with non-square A
+  b = A*x % Matrix multiplication
+  B = A' % Compute the transpose (reflection along the diagonal) of A and assign to B
+  xmean = mean(x) % Mean of a vector
+  xmedian = median(x) % Median of a vector
+  xmode = mode(x) % Mode of a vector
+  s = std(x) % Standard deviation
+  v = var (x) % variance
+  x = [-5:0.01:5]
+  y = x.*x % element-wise multiplication
+  y = x.^2 % element-wise power
+  plot(x,y) % plot y vs x
+  figure() % Create new figure window
+  hold on (off) % hold the current plot
+  help % help!
+\end{lstlisting}
+
+\end{document}

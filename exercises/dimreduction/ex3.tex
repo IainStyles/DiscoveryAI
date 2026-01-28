@@ -1,0 +1,71 @@
+\documentclass[12pt,a4paper]{tufte-handout}
+\usepackage{color} % for coloured text
+\usepackage{listings} % for code listings
+\usepackage{amsmath} % for math!
+\usepackage{graphicx} % for pictures...
+\usepackage{caption} % for margin figures
+\usepackage{hyperref} % links
+\usepackage{booktabs}
+\usepackage{import}
+\input{../../notes/macros} % New commands
+\lstset{
+  language=matlab,
+  basicstyle=\ttfamily,
+  keywordstyle=\ttfamily
+}
+
+\title{Computational Tools for Modelling and Data Analysis: Unit 4 Exercises}
+\date{November 11 2014}
+\author{Dr Iain Styles}
+\begin{document}
+
+\maketitle
+This exercise is due by 9am on Monday 17 November. Please submit your solution 
+through Canvas (Unit 2 assignment). Your submission should consist of:
+\begin{itemize}
+  \item A short report (less than two pages) containing your answers, including  any graphs, in PDF format with filename \texttt{yourstudentid.pdf} (e.g \texttt{123456.pdf})
+  \item All matlab files used to generate your results. There must be a single main file \texttt{a<yourstudentid>.m} that when run in Matlab, should generate all of your results. Add comments to indicate what each section of code is doing.
+  \item If your submission does not meet these guidlines, you will be awarded zero for the assignment.
+\end{itemize}
+
+\section{Principal Component Analysis [10 marks]}
+
+\begin{enumerate}
+  \item Write a function that calculates the principal components of a dataset. Your function should be defined as follows:
+    \texttt{function [S,T] = pca(X)}
+    \begin{itemize}
+      \item Compute the zero-mean data matrix $\tilde\bX$.
+      \item Form the covariance matrix $\mathbf{C}=\frac{1}{N-1}\tilde\bX\tilde\bX^\rT$
+      \item Compute the eigenvalues/vectors of the covariance matrix.
+    \end{itemize}
+    Your function should return \texttt{S}, a \textit{vector} of the eigenvalues sorted from largest to smallest, and \texttt{T}, the matrix of eigenvectors, one per column ordered from most significant to least significant according to their eigenvalue.\qmark{3}
+
+    \textit{[Hint: use the function \texttt{eig} to calculate the eigenvalues/vectors. Pay careful attention to the order in which they appear. You may find the functions \texttt{rot90} and \texttt{fliplr} useful.]}
+
+    \item  The file \texttt{unit4.mat} contains an imaging mass spectrometry dataset acquired using the matrix absorption by laser desorption/ionisation (MALDI) technique. A thin slice of tissue (in this case, rat brain) was placed on the steel plate and both were coated in a ``matrix'' chemical. This matrix is then removed (desorped) using a laser, and this process leads to a ``plume'' consisting of a mixture of both matrix and sample. This plume is then drawn in to a ``mass analyser'' and the mass-charge ratio of its molecular constituents are measured. The data consists of measurements in 4865 mass-charge channels at $62\times 40 = 2480$ spatial locations (pixels), thus the data is 4865-dimensional. 
+
+The data file contains the data matrix (\texttt{X}), the size of the image region (\texttt{nRows}, \texttt{nCols}) and the mass-charge ratios at which values have been recorded (\texttt{mz}).
+
+Use your function to perform PCA on this dataset and then answer the following questions:
+
+\begin{enumerate}
+  \item What is the ``total'' variance in the data?\qmark{1}
+  \item Plot a graph of the number of principal components vs the cumulative proportion of variance explained by these components. What do you think the underlying dimensionality of this dataset is? Explain your reasoning.\qmark{2}
+  \item Generate the first 10 ``scores'', reshape them into images, and plot them using \texttt{imagesc} on individual figures. Add a colorbar to each images and use a \texttt{gray} colormap. \qmark{2}
+  \item Can you relate any of the scores directly to features in the sample?\qmark{2}
+\end{enumerate}
+      
+
+%\ifx \NotSolution\undefined
+%\subsection*{Solution}
+%The calculations that need to be performed are self-explanatory from the questions. With regard to the interpretation, the data is really 3d as the eigenvalues of the covariance matric drop rapidly (1.2, 0.014, 0.0016, 0.0007)$\times 10^9$ after this (one could even argue for 2d). PCA is able to separate cells with RFP from cells with GFP very effectively (corresponding to the first 2 PCs, as seen from the images). From the 3d data, one can see distinct clusters corresponding to particular regions. The following code will perform all of the above tasks
+
+%\lstlisting{fluoropca.m}
+%\begin{center}
+%\includegraphics{PC1}
+%\includegraphics{PC2}
+%\end{center}
+%\fi
+\end{enumerate}
+
+\end{document}

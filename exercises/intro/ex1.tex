@@ -1,0 +1,87 @@
+\documentclass[12pt,a4paper]{tufte-handout}
+\usepackage{color} % for coloured text
+\usepackage{listings} % for code listings
+\usepackage{amsmath} % for math!
+\usepackage{graphicx} % for pictures...
+\usepackage{caption} % for margin figures
+\usepackage{hyperref} % links
+\usepackage{booktabs}
+\usepackage{import}
+\input{../../lectures/macros} % New commands
+\lstset{
+  language=matlab,
+  basicstyle=\ttfamily,
+  keywordstyle=\ttfamily
+}
+ 
+\setcounter{secnumdepth}{2}
+\title{Computational Tools for Modelling and Analysis: Unit 1 Exercises}
+\author{Dr Iain Styles}
+\date{\today}
+
+\excludecomment{Solutions}
+
+\begin{document}
+%\Large\sffamily
+\maketitle
+
+This assignment is due at 9am on Monday 27 October. Please submit your solution through Canvas (Assignment1: Introduction and Basics). Your submission should consist of:
+\begin{itemize}
+  \item A short report (less than two pages) containing your answers, including any graphs, in PDF format with filename \texttt{yourstudentid.pdf} (e.g \texttt{123456.pdf})
+  \item A single matlab file \texttt{yourstudentid.m} containing all of the code you have written. Add comments to indicate what each section of code is doing. This file, when run in Matlab, should generate all of your results.
+  \item If your submission does not meet these guidlines, you will be awarded zero for the assignment.
+\end{itemize}
+
+
+\begin{enumerate}
+  \item Use Matlab to solve the following sets of simultaneous equations. Give your answers to three significant figures. [4 marks]
+    \begin{enumerate}
+      \item \begin{eqnarray*}
+          x+y+z&=&5\\
+          2x+3y-z&=&7\\
+          3x-y+2z&=&2
+        \end{eqnarray*}\qmark{1}
+      \item
+        \begin{eqnarray*}
+          2x-y+4z&=&8\\
+          -x+4y-5z&=&-3\\
+        \end{eqnarray*}\qmark{1}
+      \item
+        \begin{eqnarray*}
+          2x+y-z&=&2\\
+          -3x+2y+z&=&-5\\
+          5x-2y+3z&=&0 \\
+          3x+y+z&=&-2
+        \end{eqnarray*}\qmark{1}
+    \end{enumerate}
+    In each case, check whether the solution does indeed solve the equations. Comment on your result.\qmark{1}
+
+  \item Compute the mean, median and standard deviation of the following sets of values:
+    \begin{enumerate}
+      \item $\{3.1,2.9,3.0,3.5,2.6,2.9,3.0\}$
+      \item $\{3.1,2.9,3.0,3.2,2.9,2.9,6.0\}$ 
+    \end{enumerate}
+    You are asked to quote the ``average'' of each of these sets. In each case, which ``average'' would you choose. Explain your choice. \qmark{2}
+
+  \item Plot a graph of $y=\sin^2(x)$ vs $x$ for $0\le x\le 5$ in steps of $0.1$. Label the axes as $x$ and $y$ and add the title ``Plot of y=sin$^2$(x)''. You should plot the data as a dotted red line with datapoints marked by square symbols.\textit{[Hint: you can create the superscript using} '\verb1^21']
+%    \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+%      $x$
+%      $y$
+%    \end{tabular}
+
+  \item The data file \texttt{ex1q4.mat} contains two variables, \texttt{q4x} and \texttt{q4y}.
+    \begin{itemize}
+      \item Load the data file using \texttt{load ex1q4.mat} (make sure the file is in your current working folder). You should see the new variables appear in the workspace.
+      \item Each row of \texttt{q4y} corresponds to a different ``repeat'' (10 repeats in total) of an experiment at the corresponding value of \texttt{q4x}
+    \end{itemize}
+    Plot a graph of the mean of \texttt{q4y} vs \texttt{q4x} with errorbars given by the standard deviation of \texttt{q4y}. Use a dashed black line with circular markers. Label the axes as ``x'' and ``y''.
+
+\end{enumerate}
+
+\begin{Solutions}
+  \section*{Solutions}
+  The following code will perform all of the required computations.
+  \lstinputlisting{ex1.m}
+\end{Solutions}
+
+\end{document}

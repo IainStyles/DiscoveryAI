@@ -1,0 +1,172 @@
+\documentclass[12pt,a4paper]{tufte-handout}
+\usepackage{color} % for coloured text
+\usepackage{listings} % for code listings
+\usepackage{amsmath} % for math!
+\usepackage{graphicx} % for pictures...
+\usepackage{caption} % for margin figures
+\usepackage{hyperref} % links
+\usepackage{booktabs}
+\usepackage{gensymb}
+\input{../macros} % New commands
+\usepackage{framed}
+\lstset{
+  language=matlab,
+  basicstyle=\ttfamily,
+  keywordstyle=\ttfamily
+}
+
+\setcounter{secnumdepth}{2}
+\title{Computational Tools for Modelling and Analysis: Dimensionality Reduction}
+\author{Dr Iain Styles}
+
+\date{\today}
+
+\begin{document}
+%\Large\sffamily
+\maketitle
+\section{Introduction}
+Many types of data consist of measurements of multiple quantities at each sampling point.
+\begin{asparaitem}
+  \item Fluorescence imaging at multiple wavelengths.
+  \item Mass spectrometry data.
+  \item DNA Microarray data.
+\end{asparaitem}
+Typically these datasets can have hundreds to millions of samples, of tens to hundreds of thousands of variables, and we will ultimately want to apply some type of pattern recognition method to identify structure and patterns in the data. It is too complex to visualise such data really effectively and we must apply some kind of pattern recognition such as clustering to understand what the data is telling us, but there are two challenging cases:
+\begin{asparaitem}
+  \item Large numbers of samples. This imposes additional computational demands that can in principle be overcome with more resource. This is not always the case as some methods do not scale nicely with the size of the problem,
+  \item Large numbers of variables. This also imposes a computational burden, but not one that can be so easily overcome by additional effort. There is also a much more insidious issue that must be addressed.
+\end{asparaitem}
+In this lecture, we will focus on the second of these issues: how to analyse data of very large ``dimensionality'', by which we typically mean hundreds to thousands of measurements per sample.
+
+\section{The Curse of Dimensionality}
+Measurements consisting of many variables pose some serious challenges with regard to the application of computation data analysis methods. There are many problems:
+\begin{asparaitem}
+  \item The data is hard to visualise. How can you ``picture'' data in more than three dimensions? There are some ``tricks'' involving colours and shapes you can use to visualise 6--7 dimensions. You can also use so-called spider diagrams, but it becomes increasingly more difficult as the dimensionality of the data increases.
+    
+  \item There is, as with the case of many samples, potential for considerable computational cost.
+
+  \item Most importantly, our geometrical intuition can break down in high-dimensional spaces. Consider two spheres, of radius $r$ and $r-\delta$ respectively (with $\delta \ll r$). The volume of a sphere (circle, hypersphere) scales as $r^d$, where $d$ is the dimensionality of the space, and so in the high-dimensional limit, the ratio of the volume of a sphere to the volume of its outer shell is 
+    \begin{equation}
+      \lim_{d\rightarrow \infty}\frac{r^d-(r-\delta)^d}{r^d}=1
+    \end{equation}
+Thus most of the volume of the hypersphere is concentrated in a thin shell around its edge and most of the volume is at the edges of the space. A similar phenomenon can be seen in the behaviour of distances in large numbers of dimensions: considering the minimum and maximum distances between pairs of points it can be proven that
+\begin{equation}
+  \lim_{d \to \infty} E\left(\frac{\operatorname{dist}_{\max} (d) - \operatorname{dist}_{\min} (d)}{\operatorname{dist}_{\min} (d)}\right) 
+\to 0\end{equation}
+Thus, the concept of distance in high-dimensional spaces is rather less useful than in the low-dimensional spaces we are accustomed to. This has serious implications for any algorithm that uses the distances between points in some way (e.g. $k$-means).
+\end{asparaitem}
+
+One notable feature of high-dimensional data is that  there is frequently ``redundancy'' in the variables. For example, two variables may be very strongly correlated and the data actually lie on a ``line''. In this case, it is often possible to find an alternative coordinate system for the data that removes this redundancy. This is illustrated in Figure.~\ref{fig:pcaex}.
+
+\begin{figure*}
+\includegraphics[width=0.33\textwidth]{pcaex1}
+\includegraphics[width=0.33\textwidth]{pcaex2}
+\includegraphics[width=0.33\textwidth]{pcaex3}
+\caption{Three views of a three-dimensional dataset. Left: view in original coordinate system. Centre: View in original coordinate system from viewpoint that reveals the two-dimensional nature of the data. Right: dataset viewed in coordinate system aligned with the data. Note the scales on the axes.}
+\label{fig:pcaex}
+\end{figure*}
+
+
+\section{Principal Component Analysis}
+The most common technique for finding a transformation that removes redundant dimensions in a dataset is \textbf{principal component analysis}. The example in Figure~\ref{fig:pcaex} is of a fundamentally two-dimensional dataset embedded in a three-dimensional space, and we want to find a coordinate system that is a natural description of the object -- in this case a two-dimensional coordinate system. There are infinitely many possible choices of such a coordinate system and we have to determine a set of criteria by which we will choose the appropriate one. In PCA, we choose a coordinate system such that:
+\begin{asparaitem}
+  \item The first coordinate is aligned with the direction of greatest variation in the data.
+  \item The second coordinate is perpendicular to the first coordinate and aligned with the direction of greatest variation under that constraint,
+  \item Subsequent coordinates are perpendicular to all that have already been defined, aligned with the direction of greatest variation under that constraint.
+\end{asparaitem}
+
+We begin by computing the covariance matrix, $\bSig$, which describes the way different variables ``co-vary'. The components of $\bSig$ are
+\begin{equation}
+  \Sigma_{ij} = \frac{1}{N-1}\sum_{n=1}^N \left(x_i^{(n)}-\bar x_i\right)\left(x_j^{(n)}-\bar x_j\right)
+\end{equation}
+and they describe the covariance between the variables $x_i$ and $x-j$, measured over $N$ samples. $\bar x_i$ is the mean value of $x_i$.
+
+There is a simple way to compute $\bSig$ if we organise our dataset in a sensible way. First, we construct the matrix $\bX$ with components $X_{ij} = x_i^{(j)}$; that is, each \textit{row} of $\bX$ corresponds to a variable (eg. a wavelength), and each \textit{column} corresponds to a sample (eg. a pixel). Then, compute the mean of every row (variable) and tile the resulting column vector side-by-side $N$ times such that every column is identical and every row contains the mean value of the corresponding variable in every column. We will call the new matrix $\bar\bX$. Then, we form the covariance matrix as
+\begin{equation}
+  \bSig = \frac{1}{N-1}\left(\bX-\bar\bX\right)\left(\bX-\bar\bX\right)^\rT = \tilde\bX\tilde\bX^\rT
+\end{equation}
+
+Now we have a measure of the variance in the dataset, we need to find the natural set of vectors that describe this data. To this end, we start by finding the direction of greatest variance. Let us define a new matrix $\bT=\begin{pmatrix}\bt_1 & \bt_2 & \dots \bt_M\end{pmatrix}$ such that the columns of $\bT$ (the vectors $\bt$) represent a set of new orthogonal (perpendicular) directions in the space and collectively form a new coordinate system (basis) for the space. We will take these vectors to be normalised such that $\bT^\rT\bT=\bI\leftrightarrow \bt_i\cdot\bt_j = \delta_{ij}$. In the first instance, we wish to find the vector $\bt^*$ such that the variance of the projection is maximised, that is:
+\begin{equation}
+\bt_1 =  \argmax_{\bt}\var(\bt^\rT\bX)
+\end{equation}
+In this new direction, the variance of the data is given by $\bt_1^\rT\tilde\bX\tilde\bX^\rT\bt_1 = \bt_1^\rT\bSig\bt_1$ (ignoring the pre-factor $1/(N-1)$) and hence our goal is to find $\bt=bt_1$ that maximises this. We must also impose the normalisation constraint $\bt^\rT\bt=1$ in order to find a normalised vector. We use a mathematical ``trick'' known as a Lagrange multiplier to acheive this. The quantity we wish to maximise is $\bt^\rT\bSig\bt$, from which we subtract a ``multiple of zero'':
+\begin{equation}
+\bt_1 = \argmax _\bt \left[\bt^\rT\bSig\bt -\lambda_1(\bt^\rT\bt-1)\right]
+\end{equation}
+We now differentiate this with respect to $\lambda$ and set to zero to maximise, and we find that $\bt_1$ should satisfy
+\begin{equation}
+  \left(\bSig-\lambda_1\bI\right)\bt_1 = 0
+\end{equation}
+or equivalently
+\begin{equation}
+  \bSig\bt_1 = \lambda_1\bt_1
+\end{equation}
+This is an \textit{eigenvalue} problem: $\lambda_1$ and $\bt_1$ are an eigenvalue/vector pair of $\bSig$. Since our aim is to maximise variance, and given that along $\bt_1$, the variance is $\bt_1^\rT\bSig\bt_1=\lambda_1\bt_1^\rT\bt_1 = \lambda_1$. In plain English, the greatest variance in the data is given by its largest eigenvalue, and the direction of greatest variance is the accompanying eigenvector. Some further simple but algebraically involved calculations can be done to show that the next-greatest direction of variation is given by the second-largest eigenvalue/vector pair, and so on. In summary:
+
+\begin{quote}
+\textbf{The principal components of a dataset are the eigenvectors of the covariance metric, ordered by eigenvalue.}
+\end{quote}
+
+\subsection{Calculating the Principal Components}
+
+Once it is understood what calculation has to be done, it is computationally straightforward to perform PCA: find the eigenvalues/vectors of the covariance matrix. Given $\bT = \begin{pmatrix}\bt_1 & \bt_2 & \bt_n\end{pmatrix}$ and $\bS=\diag\left(\lambda_1,\lambda_2,\dots\lambda_n\right)$ then
+\begin{equation}
+  \bSig = \bT\bS\bT^\rT
+\end{equation}
+and the transformation of the data into the new coordinate system is given by
+\begin{equation}
+  \bX' = \bT^\rT\tilde\bX
+\end{equation}
+where we have elected to use the zero-mean data. The columns of $\bX'$ are known as the \textbf{scores}: each corresponds to the data projected onto the corresponding principal component axis, with the variance in each of the scores given by the corresponding entry on the diagonal of $\bS$. 
+
+One of the goals of PCA is to allow us to remove non-varying dimensions. This is easily acheived. We will find it useful to consider the ``total variance'' of the dataset, given by the sum of the eigenvalues: $V_\rT = \sum_i S_{ii}$. It is then possible to calculate what proportion of the total variance is contributed along each of the principal component axes by computing $\lambda_i/V_\rT$. This allows us to determine how many of the principal components are necessary to describe the majority of the variance in the data. Typically, and especially with very high dimensional data, the amount of variance in each successive component decreases rapidly and when the cut-off has been determined, one can simply select the ``significant dimensions'' by truncating the columns of $\bT$ to remove the non-varying directions.
+
+The application of PCA to a dataset will thus typically follow the following workflow:
+\begin{asparaenum}
+  \item Form the data matrix $\bX$.
+  \item Form the zero-mean matrix $\tilde \bX$.
+  \item Calculate the covariance matrix $\bSig$
+  \item Calculate the eigenvalues/vectors of $\bSig$
+  \item Sort the eigenvalues/eigenvectors from largest to smallest by eigenvalue.
+  \item Choose a proportion of variance to retain and discard the eigenvalues/vectors for non-varying dimensions.
+  \item Compute the scores by projecting the data onto the new coordinates.
+\end{asparaenum}
+
+PCA for dimensionality reduction is often done as part of the pre-processing workflow before the data is analysed. As it is a purely linear transformation, the relationship between the points in the data is preserved, but since the dimensionality is reduced, the distances now become more meaningful and discriminating between data points. Thus, it is very common to use PCA to reduce data size and dimensionality prior to the application of clustering or pattern recognition techniques to find structure within the data.
+
+\section{Data Normalisation and Variable Scaling}
+
+In some multivariate datasets, where the variables are of a different type or on a different scale, it is sometimes useful to consider mapping all variables onto a common scale. For example, if we are measuring two positively correlated variables of equal variance then the two PCs will be at 45\degree to the variable axes, but if we rescale one variable by a factor of 100, the first PC will align almost exactly with that variables axis. In such cases it is common to rescale all variables to have unit variance. One should consider carefully how to use PCA in such a situation.
+
+\section{Random Projection}
+One problem with PCA is that the construction and manipulation of the covariance matrix is computationally very expensive, and for very large number of variables it will not be possible to do this calculation in a ``normal'' computer. An increasingly popular alternative which seems deceptively simple but is fundamentally very powerful is the random projection. In this method, rather than choosing the vectors onto which the data will be projected according to some underlying principle that determines the property of the projection, we instead project onto a series of random vectors, representing a series of random directions in space. Mathematically, Given a dataset $\bX_{m\times n}$ of $m$ variable from $n$ samples, form a random matrix $\bR_{m\times k}$ where each column is a normalised random vector. That is:
+\begin{equation}
+\bR=\begin{pmatrix}\br^{(1)} & \br^{(2)} & \dots & \br^{(k)}\end{pmatrix}
+\end{equation}
+where ${\br^{(i)}}^\rT\br^{(i)} = 1$. Then the dataset is projected onto these new vectors by computing
+\begin{equation}
+  \bX' = \bR^\rT\bX.
+\end{equation}
+These are analagous to the scores we computed in PCA. Unlike PCA, there is no natural metric to decide how many projections are necessary and so one needs to use one's judgement as to how many may be required. 
+
+Random projections have been shown to be surprisingly effective for dimensionality reduction. The key mathematical results underpinning its effectiveness is the Johnson-Lindenstrauss lemma, which exploit a phenomenon known as the ``concentration of measure''. A full explanation of these results is beyond the scope of this course. They have found popularity for several important reasons.
+\begin{asparaitem}
+  \item They are very inexpensive to compute.
+  \item For very high-dimensional data, randon vectors are very likely to be orthogonal.
+  \item It can be shown that they presereve certain important distance metricss.
+\end{asparaitem}
+
+\section{More Sophisticated Alternatives}
+Both PCA and random projections are purely linear transformations of the data. They do not change the ``shape'' of a cloud of datapoints, but simply project it onto a set of globally linear coordinates. Whilst this can be effective for finding and removing globally non-varying directions in a dataset, it is not suited for finding finer structure in a dataset. Some examples of non-linear dimensionality reduction techniques include
+\begin{itemize}
+  \item Self-organising maps
+  \item Curvilinear component analysis
+  \item Latent variable models
+  \item t-SNE (t-distributed stochastic neighbour embedding)
+\end{itemize}
+amongst many others. A common use of the linear methods is as pre-processing to eliminate globally redundant dimensions followed by subsequent pattern analysis using a non-linear method of a clustering technique. This is often required due to the expense of the more sophisticated methods on large dataset, so they often require a cruder reduction to be applied to make the data tractable.
+
+\end{document}
+
+

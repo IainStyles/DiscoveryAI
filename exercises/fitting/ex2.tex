@@ -1,0 +1,140 @@
+\documentclass[12pt,a4paper]{tufte-handout}
+\usepackage{color} % for coloured text
+\usepackage{listings} % for code listings
+\usepackage{amsmath} % for math!
+\usepackage{graphicx} % for pictures...
+\usepackage{caption} % for margin figures
+\usepackage{hyperref} % links
+\usepackage{booktabs}
+\usepackage{import}
+\input{../../lectures/macros} % New commands
+\lstset{
+  language=matlab,
+  basicstyle=\ttfamily,
+  keywordstyle=\ttfamily
+}
+ 
+\setcounter{secnumdepth}{2}
+\title{Computational Tools for Modelling and Analysis: Unit 2 Exercises}
+\author{Dr Iain Styles}
+\date{\today}
+
+\excludecomment{Solutions}
+
+\begin{document}
+%\Large\sffamily
+\maketitle
+
+This assignment is due at 9am on Monday 26 October. Please submit your solution through Canvas (Unit 2 assignment). Your submission should consist of:
+\begin{itemize}
+  \item A short report (less than two pages) containing your answers, including any graphs, in PDF format.
+  \item All matlab files used to generate your results. There must be a single main file that, when run in Matlab, should generate all of your results. Add comments to indicate what each section of code is doing.
+  \item If your submission does not meet these guidlines, you will be awarded zero for the assignment.
+\end{itemize}
+
+
+\begin{enumerate}
+  \item An experiment was set up to determine the quantities of a chemical involved in a reaction as the reaction progressed over time. It is known that the quantity of the chemical deceases exponentially with time according to the equation
+    \begin{equation*}
+      c(t) = a + be^{-t}
+    \end{equation*}
+    where $a+b$ is the initial quantity of the chemical, which decays over time to a constant value $a$ as other reagents are used up. The experiment was repeated 20multiple times in order to establish a mean decay curve and its standard deviation.
+
+    The data file \texttt{ex2.mat} contains an array \texttt{q1data} with three columns which contain:
+    \begin{itemize}
+    \item Column 1: times at which measurements were made
+    \item Column 2: mean concentration
+    \item Column 3: standard deviation in concentration
+    \end{itemize}
+
+    Write a program to compute $a$ and $b$ using (i) linear least-squares fitting; (ii) weighted linear least-squares fitting. Plot a graph showing the original data (including error bars) and your fitting functions for both weighted and unweighted fits. Compare and comment on your answers. What is your best estimate of $a$ and $b$? \qmark{2\%}
+
+
+    \item Some measurements are made of a quantity for which there is no \textit{a priori} model, but it is hoped that something may be learned by fitting a polynomial function of the form
+      \begin{equation*}
+        f(t)=\sum_{i=0}^n a_i t_i^i
+      \end{equation*}
+      
+      The data file you downloaded earlier contains an array \texttt{q2data} with three columns which contain:
+      \begin{itemize}
+      \item Column 1: times at which measurements were made
+      \item Column 2: mean value of the measurement
+      \item Column 3: standard deviation of the measurement
+      \end{itemize}
+      
+      Investigate the degree of polynomial ($n$ in the equation above) that best models this data using a weighted fit. Plot a graph of the least-squares versus the degree of polynomial. With reference to this graph, explain which polynomial you think is the best choice to model this data. \qmark{3\%}
+
+      \textit{[Hint: use a \texttt{for} loop to loop through the polynomial degrees.]}
+
+      \item Use the Levenberg-Marquadt algorithm in the supplied file \texttt{LMMin.m} to fit a Gaussian function of the form $f(x)=a \exp(-b(x-c)^2)$ by finding the unknown parameters $a$, $b$ and $c$. You will need to create anonymous functions for $f(x)$ and the Jacobian matrix. I suggest you use termination criteria of $e<10^-6$ or $k>=1000$.
+
+        The derivatives you will need for the Jacobian matrix are:
+        \begin{eqnarray*}
+          \frac{\partial f}{\partial a} &=& \exp(-b(x-c)^2) \\
+          \frac{\partial f}{\partial b} &=& -a(x-c)^2\exp(-b(x-c)^2) \\
+          \frac{\partial f}{\partial c} &=& 2ab(x+c)\exp(-b(x-c)^2) \\
+        \end{eqnarray*}
+
+        The Levenberg-Marquadt function takes the following arguments:
+        \begin{itemize}
+          \item \texttt{x}, \texttt{y}: the data points
+          \item \texttt{p}: Column vector of parameters \texttt{[a;b;c]} at which the algorithm wil start.
+          \item \texttt{f}: function \texttt{f(x,p)} should return matrix \texttt{F(i,j) = f(x(i),p(j))}.
+          \item \texttt{Jac}: function \texttt{Jac(x,p)} should return matrix \texttt{J(i,j) = df(x(i),p)/dp(j)}.
+          \item \texttt{lambda}: damping parameter: suggest a value of 1.
+          \item \texttt{nu}: scaling parameter: suggest a value of 2.
+          \item \texttt{eterm}: error value for termination. Suggest $10^-6$.
+          \item \texttt{kmax}: maximum number of iterations. Suggest $kmax=1000$.
+        \end{itemize}
+        It returns
+        \begin{itemize}
+          \item \texttt{p}: parameters that minimise the error.
+          \item \texttt{e}: error at termination.
+        \end{itemize}
+
+        \qmark{2\%}
+
+      \item In cellular imaging experiments, it is common to ``label'' cells or molecules of interest with marker proteins that emit light when they are stimulated by an external light source (which is of a different colour). The emitted light can be detected and images can be formed of a particular cell type of cellular component. Such methods are ubiquitous in biology. Two marker proteins that are commonly used in such experiments are the green and red fluorescent proteins, GFP and RFP. The computational problem is that the emission spectra of GFP and RFP ``overlap''  and it is not possible to separate their contributions from the images alone. Instead, we must acquire images at several wavelengths (i.e. colours) and ``unmix'' them by least-squares-fitting of the imaging model. The contributions from different marker proteins are additive and so the imaging model is linear.
+
+Letting $I(x_i,\lambda_j)$ be the image intensity at position (pixel) $x_i$ at wavelength $\lambda_j$, $\mathrm{G(R)FP}(\lambda_j)$ be the emission strength of G(R)FP at wavelength $\lambda_j$, and $g(x_i)$, $r(x_i)$ be the quantity of GFP/RFP at pixel $x_i$. The imaging model is then described by
+
+        \begin{eqnarray*}
+          \begin{pmatrix}
+            I(x_1,\lambda_1) & I(x_2,\lambda_1) & \dots I(x_n,\lambda_1) \\
+            I(x_1,\lambda_2) & I(x_2,\lambda_2) & \dots I(x_n,\lambda_2) \\
+            \vdots & \vdots & & \vdots \\
+            I(x_1,\lambda_m) & I(x_2,\lambda_m) & \dots I(x_n,\lambda_m)
+          \end{pmatrix}
+          & = &
+          \begin{pmatrix}
+            \mathrm{GFP}(\lambda_1) & \mathrm{RFP}(\lambda_1) \\
+            \mathrm{GFP}(\lambda_2) & \mathrm{RFP}(\lambda_2) \\
+            \vdots & \vdots \\
+            \mathrm{GFP}(\lambda_m) & \mathrm{RFP}(\lambda_m)
+          \end{pmatrix}
+          \begin{pmatrix}
+            g(x_1) & g(x_2) & \dots & g(x_n) \\
+            r(x_1) & r(x_2) & \dots & r(x_n) \\
+          \end{pmatrix} \\
+          \mathbf{Y} & = & \bF\mathbf{P}
+        \end{eqnarray*}
+        
+        In \texttt{ex2.mat}, the variables \texttt{q4gfp} and \texttt{q4rfp} contain the emission spectra of GFP and RFP (column 1: wavelength, column 2: emission strength). The images are contained in the zip file \texttt{ex2images.zip}. You will need to unzip this into your working folder. There are 23 images in total at wavelengths from 500nm to 720nm.
+        \begin{itemize}
+          \item Load in the spectra of the markers from the data file.
+          \item Load in the images and form the data matrix $\mathbf{Y}$. You may use the following code, but \textbf{you must add comments} to it to demonstrate that you understand how it works:
+            \begin{lstlisting}
+              Y=[];
+              for i=500:10:720
+                im = double(imread(['image_',num2str(i),'.tif']));
+                [nr,nc] = size(im);
+                Y = [Y;reshape(im,1,nr*nc)];
+              end
+            \end{lstlisting}
+          \item Solve the least-squares problem to obtain the amount of GFP and RFP at each pixel.
+          \item ``Reshape'' the parameters and display them as an image to show the spatial distributions of each marker protein. Comment on what these images show you. You can use the function \texttt{imagesc} to display the results.
+        \end{itemize}
+        \qmark{3\%}        
+        
+\end{enumerate}
+\end{document}
