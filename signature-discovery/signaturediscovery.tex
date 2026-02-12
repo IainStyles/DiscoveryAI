@@ -1,13 +1,18 @@
 \documentclass[aspectratio=169]{beamer}
 \usepackage{multicol}
+\usepackage{bm}
+\usepackage{algorithm2e}
+
 \input{../lectures/macros}
+
+\usetheme{Boadilla}
+
 \begin{document}
     \title{Discovery AI}
     \subtitle{Signature Discovery}
     \author{Professor Iain Styles (i.styles@qub.ac.uk)}
     \institute{School of EEECS, QUB}
     \date{November 9 2015}
-
 
 \begin{frame}
   \titlepage
@@ -18,6 +23,96 @@
 \end{frame}
 
 \section{Introduction}
+\subsection{About the Module}
+\begin{frame}{What this Module is about}
+The course will cover a series of topics e.g.
+\scalebox{0.65}{
+  \begin{minipage}{\textwidth}
+    \begin{enumerate}
+      \item Signature Discovery
+      \begin{itemize}
+        \item Introduction: Data signatures are distinctive, domain-specific patterns that characterize objects, events, or processes.
+        \item Classical Methods: Techniques like clustering, feature selection, and discriminative modelling to identify salient patterns.
+        \item Modern Methods: Detection and representation learning approaches that characterize objects without relying solely on class labels.
+        \item Case Studies: Viral signature discovery in biomedical data for diagnosis and monitoring.
+      \end{itemize}
+      \item Causality Discovery
+      \begin{itemize}
+        \item Introduction: Distinguishing causation from correlation is essential for reliable inference and decision-making.
+        \item Classical Methods: SCMs, Granger causality, constraint-based (e.g., PC) and score-based (e.g., GES) approaches.
+        \item Modern Methods: Deep learning models like CausalFormer and world models for learning causal structure, interventions, and counterfactuals.
+        \item Case Studies: Drug target discovery in biomedical research.
+      \end{itemize}
+      \item Hypothesis Discovery
+      \begin{itemize}
+        \item Introduction: Hypothesis generation is central to exploration, experimentation, and theory building.
+        \item Classical Methods: Abductive reasoning to infer the most plausible explanations under uncertainty.
+        \item Modern Methods: LLMs and world models to suggest relationships, mechanisms, and counterfactuals.
+        \item Case Studies: Investigating biological mechanisms of ageing using AI-driven hypothesis discovery.
+      \end{itemize}
+    \end{enumerate}
+  \end{minipage}
+}
+\end{frame}
+
+\begin{frame}{Learning Outcomes}
+  Successful students will be able to:
+  \begin{enumerate}
+    \item Demonstrate an understanding of key concepts and methodologies related to signature discovery, causality discovery, and hypothesis generation.
+    \item Apply techniques from signature discovery to extract unique identifiers from diverse datasets.
+    \item Analyse causal relationships within data to distinguish correlation from causation in AI applications.
+    \item Generate data-driven hypotheses and evaluate their scientific validity using AI-based tools.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Lectures and Practicals}
+  All sessions will all take place from 10am-4pm in the Allstate Software Studio on the 2nd Floor of the Computer Science Building.
+  \begin{itemize}
+    \item Tuesday 10th February
+    \item Friday 20th February
+    \item Tuesday 24th February
+    \item Tuesday 3rd March
+    \item Tuesday 10th March
+    \item Friday 20th March
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Assessment}
+  \begin{itemize}
+    \item Students must demonstrate active engagement in a minimum of 80\% of the timetabled activities to pass the course, which is assessed as pass/fail only. Must be passed to pass the course.
+    \item Individual written report, graded as pass/fail. Must be passed to pass the course.
+  \end{itemize}
+\end{frame}
+
+\subsection{Signature Discovery}
+
+\begin{frame}{Signature Discovery}
+
+  The first part of the course is on \textbf{Signature Discovery}
+  \pause
+  \begin{columns}[t]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{What it is about}
+        \begin{itemize}
+          \item What ``signatures'' are? (warning -- no universal definition)
+          \item Why signatures are important
+          \item How we can approach the signature discovery process
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \pause
+    \begin{column}{0.48\textwidth}
+      \begin{block}{What it is not about}
+        \begin{itemize}      
+          \item Detailed descriptions of methods
+          \item Prescriptive recipes on how to identify signatures
+          \item How to use these ideas in your PhD projects
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
 
 \begin{frame}{Signatures?}
     \begin{itemize}
@@ -28,7 +123,7 @@
 
 \begin{frame}{Signatures vs Biomarkers}
     \begin{columns}[t]
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.48\textwidth}
             \begin{block}{Biomarkers}
                 \begin{itemize}
                     \item Biomarkers are objective and measurable
@@ -38,13 +133,14 @@
                 \end{itemize}
             \end{block}
         \end{column}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.48\textwidth}
             \begin{block}{Signatures}
                 \begin{itemize}
                     \item Signatures can represent combinations of factors
                     \item Not always directly measurable
                     \item Not always informed by causal links
                     \item Not always selected for predictive/diagnostic ability
+                    \item BUT -- often informative about underlying phenomena -- \textbf{discovery}
                 \end{itemize}
             \end{block}
         \end{column}
@@ -52,6 +148,8 @@
 \end{frame}
 
 \begin{frame}{Examples of Signatures}
+  \includegraphics[width=0.48\textwidth]{background}
+  \includegraphics[width=0.48\textwidth]{tissue}
 \end{frame}
 
 \begin{frame}{How will we approach this?}
@@ -63,52 +161,84 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Two Distinct Scenarios}
+\begin{frame}{Categorization of approaches}
+  We will look at four approaches divided into two classes
     \begin{columns}[t]
-        \begin{column}{0.5\textwidth}
-            \begin{block}{Supervised}
-                The phenomena we are looking to identify signatures for are known, and some samples are "labelled"
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Prototype-based}
+              \begin{itemize}
+                \item Learn ``typical'' examples of a phenomenon
+                \item From data that is labelled (supervised)
+                \item From data that is not labelled (unsupervised)
+              \end{itemize}
             \end{block}
         \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{block}{Unsupervised}
-                The phenomena we are looking to identify signatures for are \textbf{not} known, \textbf{and/or} and no samples are "labelled"
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Decomposition-based}
+              \begin{itemize}
+                \item Learn factors that be used to represent the data
+                \item Principal Component Analysis
+                \item Non-negative matrix factorisation
+              \end{itemize}
             \end{block}
-        \end{column}
-
+          \end{column}
     \end{columns}
+  We will then draw these together to examine how to interpret the signatures we find.
 \end{frame}
 
-\section{Multivariate Data}
 
-\begin{frame}{Multivariate Data}
+
+
+
+\section{Prototype Methods}
+
+
+\begin{frame}{Prototype-based Methods}
+  \begin{itemize}
+    \item Consider a dataset in which a number of phenomena are know to be represented
+    \begin{itemize}
+      \item Different cell/tissue types
+      \item Healthy/unhealthy samples
+      \item Samples acquired under different conditions
+    \end{itemize}
+    \item Identifying a ``typical'' example of each phenomenon present constitutes a \textbf{signature}
+    \item Signatures may allow us to learn something important
+    \begin{itemize}
+      \item Distinguishing features of a phenomenon
+      \item Differences between phenomena
+    \end{itemize}
+    \item How we do find these signatures?
+  \end{itemize}
+\end{frame}
+
+\subsection{Multivariate data}
+
+\begin{frame}{A Brief Interlude: Multivariate Data}
     \begin{columns}[t]
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.48\textwidth}
             \begin{itemize}
                 \item Each sample is represented by a collection of numbers
+                \item Each number represents a ``feature'' of the data
             \end{itemize}
         \end{column}
-        \begin{column}{0.5\textwidth}
-            INSERT PICTURE OF POINT CLOUD
+        \begin{column}{0.48\textwidth}
+            \includegraphics[width=\textwidth]{pcaex1}
         \end{column}
     \end{columns}
 \end{frame}
 
 \begin{frame}{Examples of Multivariate Data}
-    \begin{multicols}{2}
-        Examples of a colour image
-        Example of a mass spectrum
-
-        Example of gene array data
-        Example of RNASeq
-    \end{multicols}
-    \pause
+    \begin{center}
+      \only<1>{\includegraphics[height=0.66\textheight]{rgbeye}}
+      \only<2>{\includegraphics[height=0.66\textheight]{massspec}}
+      \only<3>{\includegraphics[height=0.66\textheight]{microarray}}
+    \end{center}
     \textbf{What are the variables?}
 \end{frame}
 
 \begin{frame}{Variance}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.48\textwidth}
             \begin{itemize}
                 \item A single random variable $X$ is often characterised by its expected value (mean) $\mu=\rE(x)$, and its variance.
                 \item Variance characterises the range of possible value that $X$ can take and is defined as
@@ -117,29 +247,383 @@
                 \var(X) = \sigma^2 = \sum_{i=1}^N \left(X_i - \mu\right)^2
             \end{equation*}
         \end{column}
-        \begin{column}{0.5\textwidth}
-            \includegraphics[width=0.5\textwidth]{../lectures/intro/gaussian}
+        \begin{column}{0.48\textwidth}
+            \includegraphics[width=\textwidth]{./gaussian1d.png}
         \end{column}
-        ADD SAMPLE PLOT
     \end{columns}
 \end{frame}
 
 \begin{frame}{Covariance}
     \begin{columns}
-        \begin{column}{0.5\textwidth}
+        \begin{column}{0.48\textwidth}
             \begin{itemize}
-                \item A single random variable $X$ is often characterised by its expected value (mean) $\mu=\rE(x)$, and its variance.
-                \item Variance characterises the range of possible value that $X$ can take and is defined as
+                \item A vector of random variables $\bX=(X_1,\dots,X_N)$ is characterised by its expected value (mean) $\bm{\mu}=\rE(\bX)={\mu_1\dots\mu_N}$, and its \textit{covariance} $\mathbf{\Sigma}$.
+
             \end{itemize}
+
             \begin{equation*}
-                \var(X) = \sigma^2 = \sum_{i=1}^N \left(X_i - \mu\right)^2
+                \Sigma_{ij} = \frac{1}{N-1}\sum_{n=1}^N \left(X_i^{(n)}-\mu_i\right)\left(X_j^{(n)}-\mu_j\right)
             \end{equation*}
+            
         \end{column}
-        \begin{column}{0.5\textwidth}
-            PLOT 2D GAUSSIAN AND SAMPLE PLOT
+        \begin{column}{0.48\textwidth}
+            \only<1>{
+                \includegraphics[width=\textwidth]{./gaussian2d-1.png}
+                \begin{equation*}
+                    \mathbf{\Sigma} = \begin{pmatrix}1.0 & 0.0 \\ 0.0 & 1.0\end{pmatrix}
+                \end{equation*}
+            }
+            \only<2>{
+                \includegraphics[width=\textwidth]{./gaussian2d-2.png}
+                \begin{equation*}
+                    \mathbf{\Sigma} = \begin{pmatrix}2.0 & 1.0 \\ 1.0 & 1.0\end{pmatrix}
+                \end{equation*}
+            }
+            \only<3>{
+                \includegraphics[width=\textwidth]{./gaussian2d-3.png}
+                \begin{equation*}
+                    \mathbf{\Sigma} = \begin{pmatrix}3.0 & -2.0 \\ -2.0 & 1.0\end{pmatrix}
+                \end{equation*}
+            }
         \end{column}
     \end{columns}
 \end{frame}
+
+\subsection{Supervised Learning of Prototypes with LDA}
+
+\begin{frame}{Supervised Approach to Prototype Learning}
+  \begin{itemize}
+    \item Consider a dataset of $N$ samples, each of which has $M$ features.
+    \item The dataset contains examples of different phenomena
+    \item Some or all of the samples are labelled with the phenomenon they represent
+    \item There are labelled samples from all of the known phenomena
+    \pause
+    \item For each of the known categories/phenomena we will learn a \textbf{prototype}
+    \item A ``data point'' that captures the core characteristics of the phenomenon
+    \pause
+    \item In other words, as \textbf{signature}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Prototype learning with Classifiers}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item We have labelled examples of each phenomenon
+        \item We can therefore learn prototypes by training a \textbf{classifier}
+        \item Use the labelled samples to construct:
+        \begin{itemize}
+          \item A classification decision boundary to label unlabelled samples with the correct phenomenon
+          \item A ``typical'' example of the category
+        \end{itemize}
+        \item Which classifier?
+      \end{itemize}
+    \end{column}
+    \pause
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Neural network (many types)
+        \item Support Vector Machine
+        \item Random Forest
+        \item Logistic Regression
+        \item Decision Tree 
+        \item Naive Bayes
+        \item $k$-nearest neighbour
+        \pause
+        \item \textbf{(Linear) Discriminant Analysis}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Why choose LDA?}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{For}
+        \begin{itemize}
+          \item Clear and transparent underlying model
+          \item Mathematically straightforward
+          \item Prototypes emerge naturally
+          \item Explicitly generative
+          \item Easy to implement
+          \item (Lecturer's personal preference)
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \pause
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Against}
+        \begin{itemize}
+          \item Restrictive assumptions
+          \item Requires explicit mathematical understanding
+          \item Not sexy/trendy
+          \begin{itemize}
+            \item (But you can apply the ideas to other more ``modern''  approaches)
+          \end{itemize}
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The Basic Idea}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Given the labelled data points:
+        \item Construct a \textit{classification rule} as some combination of the input variables that separates the predefined classes as much as possible: \textbf{Discrimination}.
+        \item Use the classifier to \textit{predict} the class of new unlabelled data points: \textbf{Classification}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{binaryclass}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{How LDA does this}
+  \begin{itemize}
+    \item Construct a \textit{statistical model} of each class
+    \item Each class defined by its \textit{mean} and \textit{covariance}
+    \item Compute the line of equal probability
+    \item Classify points according to which side of the line they are
+    \pause
+    \item \textbf{The statistics define the signature of the class}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Quick Review of Conditional Probability}
+  We will treat this as a statistical problem, making liberal use of \textbf{Bayes' theorem}:
+
+  \begin{equation*}
+    P(a|b) = P(b|a)P(a)/P(b)
+  \end{equation*}
+
+  \begin{itemize}
+    \item $P(a|b)$ is the probability of $a$ being true, given that $b$ is already true.
+    \item $P(b|a)$ is the probability of $b$ being true, given that $a$ is already true.
+    \item $P(a)$ and $P(b)$ are the probabilities of $a$ and $b$ being true, irrespective of prior knowledge.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Conditional Probability}
+  Example: chemical ``assay'' that determines the presence of a particular chemical in a sample. We know the following::
+  \begin{itemize}
+    \item \textbf{Sensitivity} (true positive rate) is 90\%: if a sample contains the chemical, there is a 90\% chance of the test being positive.
+    \item \textbf{Specificity} (true negative rate) is 80\%: if a sample does not contain the chemical, there is an 80\% chance of the test being negative.
+    \item It is \textbf{expected (prior knowledge)} that 10\% of samples contain the chemical.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Conditional Probability}
+  How does this affect test interpretation? Letting $T$ be the test and $S$ the sample we have:
+  \begin{itemize}
+    \item Sensitivity of 90\%
+      \begin{equation*}
+        \mapsto\, P(+T|+S) = 0.9\, \mbox{and}\, P(-T|+S)=0.1
+      \end{equation*}
+    \item Specificity of 80\%
+      \begin{equation*}
+        \, \mapsto\, P(-T|-S) = 0.8\, \mbox{and}\, P(+T|-S)=0.2
+      \end{equation*}
+    \item Prior knowledge
+      \begin{equation*}
+        \, \mapsto\, P(+S) = 0.1\, \mbox{and hence}\, P(-S)=0.9
+      \end{equation*}
+  \end{itemize}
+  [sample must always give a positive or negative test result; probabilities must sum to one]
+\end{frame}
+
+\begin{frame}{Asking Questions with Conditional Probabilities}
+  \textit{What is the probability that a sample contains the chemical given a positive test result?}
+  \begin{itemize}
+    \item From Bayes' theorem:
+      \begin{equation*}
+        P(+S|+T) = P(+T|+S)P(+S)/P(+T)
+      \end{equation*}
+    \item Need probability of positive test, $P(+T)$.
+    \item Two ways to get $T$: a false positive from negative sample is negative; true positive from positive sample:
+      \begin{eqnarray*}
+        P(+T) &=& P(+T|+S)P(+S)+P(+T|-S)P(-S)\\  &=& (0.9\times0.1)+(0.2\times 0.9) = 0.27
+      \end{eqnarray*}
+      \item Similarly for a negative test:
+        \begin{equation*}
+          P(-T) = 0.73.
+        \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Asking Questions with Conditional Probabilities}
+  \begin{itemize}
+     \item Then we have
+       \begin{equation*}
+         P(+S|+T) = 0.9\times0.1/0.27 = 0.333
+        \end{equation*}
+       and similarly
+       \begin{eqnarray*}
+          P(+S|-T) &=& 0.1\times0.1/0.73 = 0.014\\
+          P(-S|+T) &=& 0.2\times0.9/0.27 = 0.667\\
+          P(-S|-T) &=& 0.9\times0.9/0.73 = 0.986
+       \end{eqnarray*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Implications}
+  \begin{itemize}
+    \item If a test is negative, 98.6\% prob that the sample does not contain the chemical.
+    \item If the test is positive, it is \textbf{twice as likely} that the sample will be negative than positive.
+    \item Surprising given the high sensitivity of the test
+    \item Must take into account the relative sizes of the two populations
+    \item Only 10\% samples likely to be positive
+    \item Much more likely that positives are false positives (90\% of samples ae negative)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Linear Discriminant Analysis}
+  \begin{itemize}
+    \item Bayesian statistics will allow us to classify data in a principled way
+    \item Allows us to calculate probabilities of points belonging to groups
+    \item Simplest base: linear binary classifier
+    \item Linear combination of variables--a straight line--that best discriminates between two pre-defined groups of points
+    \item Uses the probability distributions of the classes to find the line of equal probability dividing two classes
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Formulating LDA}
+  \begin{itemize}
+    \item Consider a data point $\bx$ which we want to assign to one of two predefined classes $\Pi_i$ ($i=1,2$)
+    \item We write that $P(\bx\in\Pi_i) = \pi_i$
+    \item We also define the conditional probability $P(\bx|\Pi_i)=f_i(\bx)$, the distribution of points given class $\Pi_i$
+    \item Then the probability that a given point $\bx$ belongs to class $\Pi_i$ is, by Bayes rule:
+      \begin{eqnarray*}
+        P(\Pi_i|\bx)  &=& \frac{P(\bx|\Pi_i)P(\Pi_i)}{P(\bx)}\\
+        &=& \frac{f_i(\bx)\pi_i}{f_1(\bx)\pi_1+f_2(\bx)\pi_2}
+      \end{eqnarray*}
+  \end{itemize}      
+\end{frame}
+
+\begin{frame}{Formulating LDA}
+  \begin{itemize}
+    \item Give the distributions of the groups $f_i(\bx)$, and the probabilities $\pi_x(\bx)$ of a point being in the groups.
+    \item New points are assigned to the group with the highest probability:
+      \begin{equation*}
+        \frac{P(\Pi_1|\bx)}{P(\Pi_2|\bx)}>1 \,\mapsto\, \bx\in\Pi_1 \quad \mbox{else}\, \bx\in\Pi_2
+      \end{equation*}
+    \item In terms of $f$ and $\pi$, $\bx$ belongs to $\Pi_1$ if
+      \begin{equation*}
+        \frac{f_1(\bx)}{f_2(\bx)}>\frac{\pi_1}{\pi_2}\label{eq:classratio}
+      \end{equation*}
+    \item otherwise to $\Pi_2$. 
+    \item Equal ratios, randomly assign to either class.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Defining the Classes}
+  \begin{itemize}
+    \item We need to define the class distributions $f_i(\bx)$.
+    \item For a simple two-class binary classifier we assume:
+      \begin{itemize}
+      \item Each data point belongs to exactly one of exactly two distinct and identifiable groups, $\Pi_1$ and $\Pi_2$
+      \item The two groups are normally distributed with different means $\bar\bx_1$ and $\bar\bx_2$ but identical covariances $\mathbf{\Sigma}$.
+      \end{itemize}
+    \item Thus, for $n=\{1,2\}$ the groups distributions are $P(\bx|\Pi_i) = f_i(\bx)$:
+      \begin{equation*}
+        f_n(\bx) = \frac{1}{(2\pi)^{r/2}\abs{\mathbf{\Sigma}}^{1/2}}\exp{[-\frac{1}{2}(\bx-\bar\bx_n)^\rT\mathbf{\Sigma}^{-1}(\bx-\bar\bx_n)]}
+      \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The Separation Rule}
+  \begin{itemize}
+  \item We know the ratio $\frac{f_1(\bx)\pi_2}{f_2(\bx)\pi_1}=1$ separates the groups.
+  \item Taking logs: $\log_e\frac{f_1(\bx)\pi_2}{f_2(\bx)\pi_1} = \log_e\frac{f_1(\bx)}{f_2(\bx)}-\log_e\frac{\pi_1}{\pi_2}$ with:
+    \begin{equation*}
+      \log_e\frac{f_1(\bx)}{f_2(\bx)} = \left(\bar\bx_1-\bar\bx_2\right)^\rT\mathbf{\Sigma}^{-1}\bx -\frac{1}{2}\left(\bar\bx_1-\bar\bx_2\right)^\rT\mathbf{\Sigma}^{-1}\left(\bar\bx_1+\bar\bx_2\right)\label{eq:logp1p2}
+    \end{equation*}
+  \item The second term on the RHS of this equation is ``constant'' (no $\bx$) and simplifies as
+    \begin{equation*}
+      \left(\bar\bx_1-\bar\bx_2\right)^\rT\mathbf{\Sigma}^{-1}\left(\bar\bx_1+\bar\bx_2\right)  =\bar\bx_1^\rT\mathbf{\Sigma}^{-1}\bar\bx_1 - \bar\bx_2^\rT\mathbf{\Sigma}^{-1}\bar\bx_2
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The Separation Rule}
+  \begin{itemize}
+    \item Writing $\mathbf{m}=\mathbf{\Sigma}^{-1} \left(\bar\bx_1-\bar\bx_2\right)$
+    \item And $c = -\frac{1}{2}\left(\bar\bx_1^\rT\mathbf{\Sigma}^{-1}\bar\bx_1 - \bar\bx_2^\rT\mathbf{\Sigma}^{-1}\bar\bx_2\right)+\log_e\frac{\pi_1}{\pi_2}$
+    \item We have
+      \begin{equation*}
+        L(\bx) = \log_e\frac{f_1(\bx)\pi_1}{f_2(\bx)\pi_2} = \mathbf{m}^\rT\bx+c,\label{eq:lindisc}
+      \end{equation*}
+    \item Which yields the following decision rule:
+      \begin{equation*}
+        \mbox{if}\,L(\bx)>0\,\mbox{assign $\bx$ to $\Pi_1$ else $\Pi_2$}
+      \end{equation*}
+    \item This is \textit{Gaussian LDA}
+    \item $\mathbf{m}^\rT\bx$ is \textit{Fisher's linear discriminant function}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Assumptions of LDA}
+  \begin{enumerate}
+    \item There are two classes
+    \item There are sufficient labelled examples to estimate the class statistics
+    \item Classes are cleanly separated by a linear boundary
+    \item Both classes are normally distributed 
+    \item Both classes having the same covariance
+  \end{enumerate}
+  \pause
+  There are extensions of LDA to address assumptions 1, 3 and 5
+
+  In practice, some relaxation of conditions 4, 5 is possible without too much impact.
+\end{frame}
+
+\begin{frame}{Quadratic Discriminant Analysis}
+  \begin{itemize}
+    \item Different class covariances require more complex analysis
+    \item If the covariances of the two classes are $\mathbf{\Sigma}_1$ and $\mathbf{\Sigma}_2$ the discriminant becomes:
+      \begin{equation*}
+        Q(\bx) = \bx^\rT\bA\bx + \bb^\rT\bx + c
+      \end{equation*}
+      a \textit{Quadratic discriminant} with
+      \begin{eqnarray*}
+        \bA &=& -\frac{1}{2}\left(\mathbf{\Sigma}_1^{-1}-\mathbf{\Sigma}_2^{-1}\right) \\
+        \bb &=& \mathbf{\Sigma}^{-1}_1\bar\bx_1 - \mathbf{\Sigma}^{-1}_2\bar\bx_2 \\
+        c &=& -\frac{1}{2}\left(\log_e\frac{\abs{\mathbf{\Sigma}_1}}{\abs{\mathbf{\Sigma}_2}}+\bar\bx_1^\rT\mathbf{\Sigma}_1^{-1}\bar\bx_1-\bar\bx_2^\rT\mathbf{\Sigma}_2^{-1}\bar\bx_2\right)-\log_e\frac{\pi_1}{\pi_2}
+      \end{eqnarray*}
+
+      The classification rule is:
+      \begin{equation*}
+        \mbox{if}\,Q(\bx)>0\,\mbox{assign $\bx$ to $\Pi_1$}
+      \end{equation*}
+      else assign $\bx$ to $\Pi_2$. 
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Multiclass LDA}
+  \begin{itemize}
+    \item Generalisation multiclass data require significantly more algebra\dots.
+    \item Compute the pairwise relative probabilities as before and form the discriminant
+      \begin{equation*}
+        L_{ij}(\bx) = \log_e\left(\frac{P(\Pi_i|\bx)}{P(\Pi_j|\bx}\right)=\log_e\left(\frac{f_i(\bx)\pi_i}{f_j(\bx)\pi_j}\right)
+      \end{equation*}
+    \item $\bx$ is assigned to $\Pi_i$ if $L_{IJ}>0$ for all $j\neq i$. 
+    \item The discriminant function between classes $i$ and $j$ is then
+      \begin{equation*}
+        L_{ij}(\bx) =\mathbf{m}^\rT_{ij}\bx+c_{ij}
+      \end{equation*}
+      with 
+      \begin{eqnarray*}
+        \mathbf{m}_{ij} &=& \left(\bar\bx_i-\bar\bx_j\right)^\rT\mathbf{\Sigma}^{-1}\, \mbox{and}\\
+        c_{ij}&=&-\frac{1}{2}\left(\bar\bx_i^\rT\mathbf{\Sigma}^{-1}\bar\bx_i - \bar\bx_j^\rT\mathbf{\Sigma}^{-1}\bar\bx_j\right)+\log_e\frac{\pi_i}{\pi_j}.
+      \end{eqnarray*}
+  \end{itemize}
+\end{frame}
+
+
+
+
 
 \begin{frame}{Considerations}
     \begin{itemize}
@@ -154,19 +638,635 @@
     \end{itemize}
 \end{frame}
 
-\section{Principal Component Analysis}
 
-\begin{frame}{Principal Component Analysis}
+\subsection{$k$-mean clustering}
+
+\begin{frame}{Prototype Learning with Clustering}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item What do we do if we do not have any labelled examples of our phenomena?
+        \item We cannot use class statistics to derive the boundaries
+        \item We have to find the structure ourselves
+        \item Clustering
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{clustering}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Clustering}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item We have a multivariate dataset containing samples representing multiple phenomena
+        \item We have no labelled examples
+        \item In classification, we group datapoints based on their similarity to the labelled samples
+        \item In clustering we have to find those groups without the labels
+        \item We will aim to find:
+        \begin{itemize}
+          \item A set of boundaries that separate distinct phenomena
+          \item A ``typical'' example of the category
+        \end{itemize}
+        \item Many clustering methods - which should be use?
+      \end{itemize}
+    \end{column}
+    \pause
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Hierarchical clustering
+        \item DBScan
+        \item ToMATo
+        \item Gaussian mixtures
+        \item Affinity Propagation
+        \item Spectral Clustering
+        \pause
+        \item \textbf{$k$-means}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Why choose $k$-means?}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{For}
+        \begin{itemize}
+          \item Clear and transparent underlying model
+          \item Computationally straightforward
+          \item Prototypes emerge naturally
+          \item Can be made generative
+          \item Scales well
+          \item (Lecturer's personal preference)
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \pause
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Against}
+        \begin{itemize}
+          \item Restrictive assumptions
+          \item Practical implementation relies on heuristic
+          \item Not sexy/trendy
+          \begin{itemize}
+            \item (But you can apply the ideas to other more ``modern''  approaches)
+          \end{itemize}
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{The $k$-means algorithm}
+  \begin{itemize}
+    \item In $k$-means clustering we aim to partition set of $n$ observations into $k \leq n$ sets $\mathbf{S} = \{S1, S2, ..., S_k\}$
+    \item This is done to minimize the within-cluster sum of squares (the variance)
+    \item In other words, we try to find the $k$ ``tightest'' clusters
+    \item Formally this requires us to find:
+    \begin{equation*}
+      \argmin_\mathbf{S} \sum_{i=1}^k\sum_{\mathbf{x\in S_i}}\left\|\mathbf{x} -\bm{\mu}_{i}\right\|^{2}
+    \end{equation*}
+    \pause
+    \item This is a surprisingly hard problem to solve in general
     \begin{itemize}
-        \item Multivariate
+      \item Combinatorial optimisation does not scale well
     \end{itemize}
+    \item In practice we solve using a heuristic
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The $k$-means Algorithm}
+  \begin{columns}[t]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Informally\dots}
+        \begin{itemize}
+          \item Number of clusters $k$ is specified by the ``user''. 
+          \begin{itemize}
+            \item[1)] First, randomly assign every data point to one of the clusters.
+            \item[2)] Compute the mean position (in the data space) of each cluster
+            \item[3)] For each data point, calculate distance to mean of each cluster
+            \item[4)] Re-assign points to their nearest cluster.
+            \item[5)] Return to step 2 and repeat until the clusters are not changing.
+          \end{itemize}
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Lloyd's Algorithm}
+        \scalebox{0.2}{
+          \begin{minipage}{\linewidth}
+            \begin{algorithm}[H]
+              \SetKwComment{com}{\% }{}
+              \KwData{Data points $Data[N]$; Number of clusters $K$}
+              \KwResult{$\bp,e(\bp)$, parameters that minimmise the least squares error, the error.}
+
+              \com{Randomly assign each point to a cluster}
+              \For{$i\gets 1$ \KwTo $N$}{
+                $ClusterIndex[i]\gets randint(1,K)$
+              }
+              \com{Calculate the mean of each cluster}
+              \For{$i\gets 1$ \KwTo $K$}{
+                $ClusterMean[i] \gets mean(Data[Cluster[i]])$
+              }
+
+              \com{Iterate until clusters are stable}
+              $Converged\gets False$\;
+              \While{$Converged==False$}{
+
+                  \com{Compute distance from every point to each cluster mean}
+                  \For{$i\gets 1$ \KwTo $K$}{
+                    \For{$j\gets 1$ \KwTo $N$}{
+                      $dist[i][j] \gets distance(ClusterMean[i],Data[j])$
+                    }
+                  }
+
+                  \com{Find the nearest mean for each data point}
+                  \For{$i\gets 1$ \KwTo $N$}{
+                    \For{$j\gets 1$ \KwTo $K$}{
+                      $NewClusterIndex[i] = nearest(Data[i],ClusterMean[j])$
+                    }
+                  }
+
+                  \com{Generate new clusters}
+                  \For{$j\gets 1$ \KwTo $K$}{
+                    $ClusterMean[i] \gets mean(Data[NewClusterIndex==i])$
+                  }
+
+                  \com{Check to see if cluster membership has changed}
+                  $Converged\gets True$
+
+                  \If{NewClusterIndex != ClusterIndex}{
+                      $Converged \gets False$
+                  }
+
+                  \com{Replace old clusters with new ones}
+                  $ClusterIndex \gets NewClusterIndex$
+                  $ClusterMean \gets NewClusterMean$
+                }
+              \caption{The $k$-Means Algorithm.}
+              \label{alg:kmeans}
+            \end{algorithm}
+          \end{minipage}
+        }
+      \end{block}
+    \end{column}
+  \end{columns}
 \end{frame}
 
 
-\section{Non-Negative Matrix Factorisation}
 
-\section{Classification}
+\begin{frame}{Lloyd's Algorithm Visualised}
+  \only<1>{
+    \begin{columns}
+      \begin{column}{0.48\textwidth}
+        \begin{itemize}
+          \item[1)] First, randomly assign every data point to one of the clusters.
+          \item[2)] Compute the mean position (in the data space) of each cluster
+          \item[3)] For each data point, calculate distance to mean of each cluster
+          \item[4)] Re-assign points to their nearest cluster.
+          \item[5)] Return to step 2 and repeat until the clusters are not changing.
+        \end{itemize}
+      \end{column}
+      \begin{column}{0.48\textwidth}
+        \includegraphics[width=\textwidth]{kmeans1}
+      \end{column}
+    \end{columns}
+  }
+  \only<2>{
+    \begin{columns}
+      \begin{column}{0.48\textwidth}
+        \begin{itemize}
+          \item[1)] \textbf{First, randomly assign every data point to one of the clusters.}
+          \item[2)] Compute the mean position (in the data space) of each cluster
+          \item[3)] For each data point, calculate distance to mean of each cluster
+          \item[4)] Re-assign points to their nearest cluster.
+          \item[5)] Return to step 2 and repeat until the clusters are not changing.
+        \end{itemize}
+      \end{column}
+      \begin{column}{0.48\textwidth}
+        \includegraphics[width=\textwidth]{kmeans2}
+      \end{column}
+    \end{columns}
+  }
+  \only<3>{
+    \begin{columns}
+      \begin{column}{0.48\textwidth}
+        \begin{itemize}
+          \item[1)] First, randomly assign every data point to one of the clusters.
+          \item[2)] \textbf{Compute the mean position (in the data space) of each cluster}
+          \item[3)] For each data point, calculate distance to mean of each cluster
+          \item[4)] Re-assign points to their nearest cluster.
+          \item[5)] Return to step 2 and repeat until the clusters are not changing.
+        \end{itemize}
+      \end{column}
+      \begin{column}{0.48\textwidth}
+        \includegraphics[width=\textwidth]{kmeans2av}
+      \end{column}
+    \end{columns}
+  }
+  \only<4>{
+    \begin{columns}
+      \begin{column}{0.48\textwidth}
+        \begin{itemize}
+          \item[1)] First, randomly assign every data point to one of the clusters.
+          \item[2)] Compute the mean position (in the data space) of each cluster
+          \item[3)] \textbf{For each data point, calculate distance to mean of each cluster}
+          \item[4)] \textbf{Re-assign points to their nearest cluster.}
+          \item[5)] Return to step 2 and repeat until the clusters are not changing.
+        \end{itemize}
+      \end{column}
+      \begin{column}{0.48\textwidth}
+        \includegraphics[width=\textwidth]{kmeans3}
+      \end{column}
+    \end{columns}
+  }
 
-\section{Clustering}
+  \only<5>{
+    \begin{columns}
+      \begin{column}{0.48\textwidth}
+        \begin{itemize}
+          \item[1)] First, randomly assign every data point to one of the clusters.
+          \item[2)] \textbf{Compute the mean position (in the data space) of each cluster}
+          \item[3)] For each data point, calculate distance to mean of each cluster
+          \item[4)] Re-assign points to their nearest cluster.
+          \item[5)] \textbf{Return to step 2 and repeat until the clusters are not changing.}
+        \end{itemize}
+      \end{column}
+      \begin{column}{0.48\textwidth}
+        \includegraphics[width=\textwidth]{kmeans3av}
+      \end{column}
+    \end{columns}
+  }
+
+  \only<6>{
+    \begin{columns}
+      \begin{column}{0.48\textwidth}
+        \begin{itemize}
+          \item[1)] First, randomly assign every data point to one of the clusters.
+          \item[2)] Compute the mean position (in the data space) of each cluster
+          \item[3)] \textbf{For each data point, calculate distance to mean of each cluster}
+          \item[4)] \textbf{Re-assign points to their nearest cluster.}
+          \item[5)] Return to step 2 and repeat until the clusters are not changing.
+        \end{itemize}
+      \end{column}
+      \begin{column}{0.48\textwidth}
+        \includegraphics[width=\textwidth]{kmeans4}
+      \end{column}
+    \end{columns}
+  }
+  \only<7>{
+    \begin{columns}
+      \begin{column}{0.48\textwidth}
+        \begin{itemize}
+          \item[1)] First, randomly assign every data point to one of the clusters.
+          \item[2)] Compute the mean position (in the data space) of each cluster
+          \item[3)] For each data point, calculate distance to mean of each cluster
+          \item[4)] Re-assign points to their nearest cluster.
+          \item[5)] Return to step 2 and repeat until \textbf{the clusters are not changing.}
+        \end{itemize}
+      \end{column}
+      \begin{column}{0.48\textwidth}
+        \includegraphics[width=\textwidth]{kmeans4av}
+      \end{column}
+    \end{columns}
+  }
+\end{frame}
+
+
+\begin{frame}{Notes about $k$-means}
+  There are a few points to note:
+  \begin{itemize}
+    \item Initial random seeding $\rightarrow$ repeats needed
+    \item Have to ``guess'' the number of clusters.
+    \begin{itemize}
+      \item Too many, and you will split what should be a single cluster.
+      \item Too few, and you will combine clusters that should be separate, or splitting clusters and merge with others.
+    \end{itemize}
+    \item This is a computationally ``hard'' algorithm (in the jargon, it is NP-hard).
+      \begin{itemize}
+        \item The number of distance calculations increases rapidly with the number of clusters and the number of data points so it can be very costly for large datasets.
+        \item But not as hard as methods that compare all data points with each other
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Notes about $k$-means }
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Clusters are separated by linear boundaries only
+        \item Regions define by these lines define the clusters
+        \only<2>{
+          \item Variables may need to be rescaled
+          \item Common to scale to unit variance in each dimension
+        }
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \only<1>{\includegraphics[width=\textwidth]{kmeans-part}}
+      \only<2>{\includegraphics[width=\textwidth]{clusterscaling}}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Summary}
+  \begin{itemize}
+    \item Prototype methods are useful in situations where you have multiple phenomena present in a sample and want to distinguish between them
+    \item Each data point $\rightarrow$ a distinct identifiable phenomenon
+    \begin{itemize}
+      \item Cell or tissue type
+      \item Health vs diseased samples
+      \item Treatment vs no Treatment
+    \end{itemize}
+    \item What if each datapoint is a mixture of phenomena \textit{with their own signatures}?
+    \begin{itemize}
+      \item Spectroscopic signal with multiple components
+      \item Multiple interacting genes
+    \end{itemize}
+    \item We need a different approach that represents data points as mixtures of the Signatures
+    \item And allows us to discover the component signatures too!
+  \end{itemize}
+\end{frame}
+
+
+\section{Decomposition-based Approaches}
+
+\begin{frame}{Decompositions for Signature Learning}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Take a set of $n$ multivariate data points $\{\bX^{(1)},\dots,\bX^{(n)}\}$
+        \item We can represent, or decompose, each data point as a sum of $K$ components
+        \begin{equation*}
+          \bX^{(i)} = \sum_{k=1}^K A_{ik}\bm{\Phi}^{(k)}\quad\Longleftrightarrow\quad X^{(i)}_j = \sum_{k=1}^K A_{ik}\Phi^{(k)}_j
+        \end{equation*}
+      \end{itemize}
+      Or in matrix form, $\bX = \bA\bm{\Phi}$
+
+      \textbf{Linear Decompositions}
+
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{lineardecomposition}
+      \begin{equation*}
+        P = (1,3) = \bX + 3\mathbf{Y} = A_0\bX' + A_1\mathbf{Y}'
+      \end{equation*}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Linear Decompositions}    
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item We aim to find:
+        \begin{enumerate}
+          \item The \textbf{components} $\Phi$
+          \item The \textbf{coefficients} $A$
+        \end{enumerate}
+        \item Infinitely many possibilities
+        \item How do we choose them in a principled way?
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Independent Component Analysis (ICA)
+        \item Random Projections
+        \item Network Component Analysis
+        \item Directional Component Analysis
+        \pause
+        \item \textbf{Principal Component Analysis (PCA)}
+        \item \textbf{Non-negative Matrix Factrisation (NNMF)}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\subsection{Principal Component Analysis}
+
+\begin{frame}{Principal Component Analysis}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item PCA allows us to find a decomposition that aligns components to the shape of the data:
+        \begin{itemize}
+          \item The first coordinate is aligned with the direction of greatest variation in the data.
+          \item The second coordinate is perpendicular to the first coordinate and aligned with the direction of greatest variation under that constraint,
+          \item Subsequent coordinates are perpendicular to all that have already been defined, aligned with the direction of next-greatest variation under that constraint.
+        \end{itemize}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{pcasketch}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Performing PCA}
+  \begin{itemize}
+    \item Covariance matrix, $\mathbf{\Sigma}$ is central to PCA
+      \begin{equation*}
+        \Sigma_{ij} = \frac{1}{N-1}\sum_{n=1}^N \left(x_i^{(n)}-\mu_i\right)\left(x_j^{(n)}-\mu_j\right)
+      \end{equation*}
+    \item Easy to compute $\mathbf{\Sigma}$ if we organise our dataset in a sensible way:
+      \begin{itemize}
+        \item Construct matrix $\bX$ with components $X_{ij} = x_i^{(j)}$
+        \item Each \textit{row} of $\bX$ corresponds to a variable
+        \item Each \textit{column} corresponds to a sample
+        \item Compute the mean of every row and tile the resulting column vector side-by-side $N$ times $\rightarrow\bar\bX$.
+        \item Then, we form the covariance matrix as
+          \begin{equation}
+            \mathbf{\Sigma} = \frac{1}{N-1}\left(\bX-\bar\bX\right)\left(\bX-\bar\bX\right)^\rT = \frac{1}{N-1}\tilde\bX\tilde\bX^\rT
+          \end{equation}
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Performing PCA}
+  \begin{itemize}
+    \item We will now find coordinate vectors that align with the covariance structure
+    \item Define matrix $\bT=\begin{pmatrix}\bt_1 & \bt_2 & \dots \bt_M\end{pmatrix}$
+    \item Columns of $\bT$ (the vectors $\bt$) represent  form a new coordinate system (basis) for the space.
+    \item Normalised such that $\bT^\rT\bT=\bI\leftrightarrow \bt_i\cdot\bt_j = \delta_{ij}$.
+    \item First we find the direction of greatest variance
+    \item Find the vector $\bt_1$ that maximises the variance of the projection of the data.
+    \begin{equation*}
+      \bt_1 =  \argmax_{\bt}\var(\bt^\rT\bX)
+    \end{equation*}
+    \item Now $\var(\bt^\rT\bX)=\bt^\rT\tilde\bX\tilde\bX^\rT\bt = \bt^\rT\mathbf{\Sigma}\bt$ ignoring the pre-factor $1/(N-1)$
+    \item Find $\bt=\bt_1$ that maximises this subject to $\bt^\rT\bt=1$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Performing PCA}
+  \begin{itemize}
+    \item Mathematical ``trick'': Lagrange multiplier - allows us to enforce constraints
+    \item Subtract a ``multiple of zero'':
+      \begin{equation}
+        \bt_1 = \argmax _\bt \left[\bt^\rT\mathbf{\Sigma}\bt -\lambda_1(\bt^\rT\bt-1)\right]
+      \end{equation}
+    \item Differentiate this with respect to $\lambda$ and set to zero to maximise
+      \begin{equation}
+        \left(\mathbf{\Sigma}-\lambda_1\bI\right)\bt_1 = 0\quad\rightarrow\quad \mathbf{\Sigma}\bt_1 = \lambda_1\bt_1
+      \end{equation}
+    \item Solve ''\textit{eigenvalue}'' problem for largest $\lambda_1$ and accompanying $\bt_1$
+    \item $\bt_1$ is direction of greatest variation
+    \item $\bt_1^\rT\mathbf{\Sigma}\bt_1=\lambda_1\bt_1^\rT\bt_1 = \lambda_1$ is variance along that direction 
+    \item Next-greatest direction of variation is given by the second-largest eigenvalue/vector pair\dots
+  \end{itemize}
+  \begin{quote}
+    \textbf{The principal components of a dataset are the eigenvectors of the covariance metric, ordered by eigenvalue.}
+  \end{quote}
+\end{frame}
+
+\begin{frame}{}
+  \begin{itemize}
+    \item Once PCs have been found we transform the zero-mean data into the new coordinate system
+    \begin{equation}
+      \bX' = \bT^\rT\tilde\bX
+    \end{equation}
+    \item $\sqrt(\lambda_i)\bt_i$ are called the \textbf{loadings}. 
+    \item Columns of $\bX'$ are the \textbf{scores}: data projected onto the PC axes.
+    \item Note that $\mathbf{\Sigma} = \bT\bS\bT^\rT$ where $\bS=\diag(\lambda_1,\lambda_2,\dots,\lambda_n)$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Reducing dimensionality with PCA}
+  \begin{itemize}
+    \item Each PC is a linear combination of the original variables
+    \item Because PC's are aligned with data, do not always need all of them
+    \item We can remove non-varying dimensions.
+    \item Useful to consider the ``total variance'' $V_\rT = \sum_i \lambda_i$.
+    \item Compute proportion of total variance along each PC by computing $\lambda_i/V_\rT$. 
+    \item Determine how many PCs describe the majority of the variance. 
+    \item Decide which ones to remove
+    \item Set components of data in those dimensions to zero or equivalently, remove the corresponding columns from $\bT$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Data Normalisation and Variable Scaling}
+  \begin{itemize}
+    \item In some multivariate datasets, variables are of a different type or on a different scale
+    \item Useful to consider mapping all variables onto a common scale to avoid bias
+    \item Most common: rescale all variables to have unit variance.
+    \item Take care when using PCA in such a situation.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{PCA and signatures}
+  \begin{itemize}
+    \item The components (loadings) of PCA can be regarded as signatures
+    \item Each component represents some fundamental building block of the data
+  \end{itemize}
+\end{frame}
+
+
+
+\subsection{Non-Negative Matrix Factorisation}
+
+\begin{frame}{A Problem with PCA}
+  \begin{columns}[T]
+    \begin{column}{0.78\textwidth}
+      \begin{itemize}
+        \item PCA components are linear combinations of the original variables
+        \item The loadings of those can be positive or negative
+        \item In many situations, this is unphysical 
+        \item Many variable types cannot take negative values
+        \begin{itemize}
+          \item Chemical concentrations
+          \item Numbers of specimens
+          \item Volumes, masses, etc
+        \end{itemize}
+        \item PCA loadings not always physically interpretable
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.18\textwidth}
+      \includegraphics[width=\textwidth]{massspec}
+      \includegraphics[width=\textwidth]{pc0}
+      \includegraphics[width=\textwidth]{pc1}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Non-Negative Matrix Factorisation}
+  \begin{columns}
+    \begin{column}{0.78\textwidth}
+      \begin{itemize}
+        \item In non-negative matrix factorisation we aim to find a more interpretable decomposition
+        \item Components are positive linear combinations of variables
+        \item Samples are positive linear combinations of components 
+
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.18\textwidth}
+      \includegraphics[width=\textwidth]{massspec}
+      \includegraphics[width=\textwidth]{nmf0}
+      \includegraphics[width=\textwidth]{nmf1}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Non-Negative Matrix Factorisation}
+  \begin{columns}
+    \begin{column}{0.78\textwidth}
+      \begin{itemize}
+        \item NNMF is not as clean as PCA
+        \item No analytic solutions
+        \item Requires approximation and numerics
+        \item NNMF is typically an \textbf{approximate} decomposition
+        \only<1>{
+          \begin{equation*}
+            X^{(i)}_j = \sum_{k=1}^K A_{ik}\Phi^{(k)}_j
+          \end{equation*}
+        }
+        \only<2>{
+          \begin{equation*}
+            X^{(i)}_j \approx \sum_{k=1}^K A_{ik}\Phi^{(k)}_j
+          \end{equation*}
+          with $A_{ik}$ and $\Phi^{(k)}_j$ all strictly $\geq 0$.
+        }
+
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.18\textwidth}
+      \includegraphics[width=\textwidth]{massspec}
+      \includegraphics[width=\textwidth]{nmf0}
+      \includegraphics[width=\textwidth]{nmf1}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Computing analysis NNMF}
+  \begin{itemize}
+    \item The general problem statement is $\mathbf{X}\approx \mathbf{A}\bm{\Phi}$ with $\bX$ known
+    \item The elements of $\mathbf{X}$, $\mathbf{A}$, $\bm{\Phi}$ are all $\ge 0$
+    \item Need to solve $\argmin_{\bA,\bm{\Phi}} \|\bX-\bA\bm\Phi\|^2$ under positivity constraints
+    \item Can be solved via linear programming, convex optimisation, and other methods
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}{Non-linear Representations}
+  \begin{itemize}
+    \item PCA and NNMF are purely linear transformations of the data
+    \item Do not change the ``shape'' of a cloud of datapoints
+    \item Not suited for finding finer structure in a dataset
+    \item Popular alternatives for this are:
+    \begin{itemize}
+      \item Self-organising maps
+      \item Curvilinear component analysis
+      \item Latent variable models
+      \item t-distributed stochastic neighbour embedding
+      \item Uniform Manifold Approaximation and Projection (UMAP)
+    \end{itemize}
+    \item Often use linear methods as pre-processing to eliminate globally redundant dimensions 
+    \item Then use a non-linear method or clustering to sort out the subleties.
+  \end{itemize}
+\end{frame}
+
 
 \end{document}
