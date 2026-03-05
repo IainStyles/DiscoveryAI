@@ -1,0 +1,598 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage{multicol}
+\usepackage{bm}
+\usepackage{algorithm2e}
+
+\input{../lectures/macros}
+
+\usetheme{Boadilla}
+
+\begin{document}
+    \title{Discovery AI}
+    \subtitle{Signature Discovery}
+    \author{Professor Iain Styles (i.styles@qub.ac.uk)}
+    \institute{School of EEECS, QUB}
+    \date{February 20 2026}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+\section{Introduction}
+
+\subsection{Recap of Session 1}
+\begin{frame}{Recap of Session 1}
+  \begin{itemize}
+    \item Prototype learning methods
+    \begin{itemize}
+      \item Supervised learning with LDA
+      \item Unsupervised learning with $k$-means 
+    \end{itemize}
+    \item Vector Quantisation methods
+    \begin{itemize}
+      \item Principal Component Analysis
+      \item Nonnegative Matriix Factorisation
+    \end{itemize}
+    
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{What do these methods all have in common?}
+  \begin{itemize}
+    \item LDA: linear boundaries between groups by supervised Learning
+    \item $k$-means: linear boundaries by unsupervised Learning
+    \item PCA: linear combination of vectors aligned with variation in data
+    \item NMF: positive linear combination of postive vectors
+    \pause
+    \item Linear methods tend to be relatively mathematically tractable, but linearity is a significant and limiting assumption
+  \end{itemize}
+\end{frame}
+
+\subsection{Embeddings}
+\begin{frame}{Embeddings}
+      \begin{itemize}
+        \item PCA and NMF are examples of \textbf{embeddings}
+        \item We learn a new set of factors for the data (a \textbf{basis})
+        \item Identify which factors are needed to represent the data to some level of accuracy
+        \item Ignore the rest
+        \item Represents high dimensional data in low dimensional space
+        \pause
+        \item Low dimensional \textbf{embedding}
+      \end{itemize}
+\end{frame}
+
+\begin{frame}{PCA Embeddings}
+  \begin{center}
+    \only<1>{
+      \includegraphics[width=0.4\textwidth]{pcimage0}
+      \includegraphics[width=0.48\textwidth]{pcscatter0}
+    }
+    \only<2>{
+      \includegraphics[width=0.4\textwidth]{pcimage1}
+      \includegraphics[width=0.48\textwidth]{pcscatter1}
+    }
+    \only<3>{
+      \includegraphics[width=0.4\textwidth]{pcimage2}
+      \includegraphics[width=0.48\textwidth]{pcscatter2}
+    }
+  \end{center}
+\end{frame}
+
+%\begin{frame}{Embeddings}
+%  \begin{columns}[T]
+%    \begin{column}{0.48\textwidth}
+%    \end{column}
+%    \begin{column}{0.48\textwidth}
+%    \end{column}
+%  \end{columns}
+%\end{frame}
+
+%\begin{frame}{Embeddings}
+%  \begin{columns}[T]
+%    \begin{column}{0.48\textwidth}
+%    \end{column}
+%    \begin{column}{0.48\textwidth}
+%    \end{column}
+%  \end{columns}
+%\end{frame}
+
+\section{t-distributed Stochastic Neighbour Embedding}
+
+\begin{frame}{Non-linear Embeddings}
+    \begin{itemize}
+      \item PCA and other linear embeddings do not change relative positions of points
+      \item Points can "collapse" onto each other
+      \item Can limit ability to discriminate distinct phenomena 
+      \item Optimal low-d space could still be $>3$d and therefore hard to visualise
+      \item To visualised high-d data, need a 2d or 3d embedding
+      \item Linear embedding simply cannot do this for most datasets whilst still capturing all of the variation in the data
+      \item Require non-linear methods
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{t-distributed Stochastic Neighbour Embedding}
+    \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item tSNE is the most popular non-linear embedding
+        \item Specifically designed to visualisation in 2/3d
+        \item Basic idea is to find a mapping that
+        \begin{enumerate}
+          \item Pulls points that are similar together
+          \item Keep points that as dissimilar apart
+        \end{enumerate}
+        \url{https://jmlr.org/papers/volume9/vandermaaten08a/vandermaaten08a.pdf}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{tSNEdigits}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{t-SNE: The Basic Idea}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Learn a mapping $f$ from a high dimensional space $\mathcal{X}$ to a 2/3d space $\mathcal{Y}$ given a dataset $\{\bx_1,\dots,\bx_N\}\in\mathcal{X}$
+        \begin{equation*}
+          f:\quad \mathcal{X}\mapsto\mathcal{Y}
+        \end{equation*}
+        \pause
+        \item The mapping should preserve \textit{significant structure} in the data
+        \begin{enumerate}
+          \item Points that are near in $\mathcal{X}$ should be near in $\mathcal{Y}$
+          \item Points that are far apart in $\mathcal{X}$ should be far apart in $\mathcal{Y}$
+        \end{enumerate}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{tSNE's Underlying Model}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item tSNE models data probabilistically
+        \item For each data point $\bx_i$ in  $\mathcal{X}$ define the probability that another data point $\bx_j$ is its neighbour as 
+        \begin{equation*}
+          P(j\vert i) = \frac{\exp\left(-\|\bx_i-\bx_j\|^2/2\sigma_i^2\right)}{\sum_{k\ne i}\exp\left(-\|\bx_i-\bx_k\|^2/2\sigma_i^2\right)}
+        \end{equation*}
+        where $\sigma_i$ will be chosen depending on the data
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{tSNE's Underlying Model}
+  \begin{itemize}
+    \item Now do the same in $\mathcal{Y}$
+    \item For each data point $\by_i$ in  $\mathcal{Y}$ define the probability that another data point $\by_j$ is its neighbour as 
+    \begin{equation*}
+      Q(j\vert i) = \frac{\exp\left(-\|\by_i-\by_j\|^2\right)}{\sum_{k\ne i}\exp\left(-\|\by_i-\by_k\|^2\right)}
+    \end{equation*}
+    where we have chosen to set $\sigma=1/\sqrt{2}$ for all data points
+    \pause
+    \item We now aim to find $f:\quad \mathcal{X}\mapsto\mathcal{Y}$ such that the probabilities of point $i$ picking point $j$ as a neighbour are as similar as possible in $\mathcal{X}$ and $\mathcal{Y}$
+    \pause
+    \item We want to make $P$ and $Q$ as similar as possible
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The Kullback-Leibler Divergence}
+  \begin{itemize}
+    \item The Kullback-Leibler Divergence is a measure of similarity between two probability distributions
+    \item $\mathrm{KL}(P\Vert Q)$ is a measure of how well an approximate distribution $Q$ represents a true distribution $P$
+    \item Derived by considering the ``suprisal'' from using $Q$ instead of $P$ using methods from information theory
+    \item Computed as
+    \begin{equation*}
+      \mathrm{KL}(P\Vert Q) = P\log\frac{P}{Q}
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The Kullback-Leibler Divergence}
+  \begin{itemize}
+    \item In our specific case, we want to match the distribution across all data points, so we define a \textbf{cost function} which measures the difference
+    \begin{equation*}
+      C = \sum_{i,j}\mathrm{KL}(P(j\vert i)\Vert Q(j\vert i)) = \sum_{i,j} P(i\vert j)\log\frac{P(i\vert j)}{Q(i\vert j)}
+    \end{equation*}
+    \item Our desired mapping is therefore the one that finds $y\in\mathcal{Y}$ such that $C$ is minimised, in other words,
+    \begin{equation*}
+      f = \argmin_y(C)
+    \end{equation*}   
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{A Problem with the KL Divergence}
+  \begin{itemize}
+    \item Our cost is not symmetric with respect to $P$ and $Q$
+    \item This means that:
+    \begin{itemize}
+      \item It heavily penalises points that are close in $\mathcal{X}$ being placed far apart in $\mathcal{Y}$ -- this is what we want
+      \item It does not penalise points that are far apart in $\mathcal{X}$ being placed close together in $\mathcal{Y}$ -- this is not desirable
+    \end{itemize}
+    \item To address this, we need to symmetrise the cost function $C$
+  \end{itemize} 
+\end{frame}
+
+\begin{frame}{Symmetrising the Cost Function}
+  \begin{itemize}
+    \item Writing the cost function in terms of conditional probabilities is quite intuitive, but we can also write it in terms of the joint distribution
+    \begin{equation*}
+      C = \sum_{i,j}\mathrm{KL}(P(i,j)\Vert Q(i,j)) = \sum_{i,j} P(i,j)\log\frac{P(i,j)}{Q(i,j)}
+    \end{equation*}
+    \pause
+    \item In the low-d space $\mathcal{Y}$ the joint distribution is
+    \begin{equation*}
+      Q(i,j) = \frac{\exp\left(-\|\by_i-\by_j\|^2\right)}{\sum_{k\ne l}\exp\left(-\|\by_k-\by_l\|^2\right)}
+    \end{equation*}
+    \pause
+    \item This form does not work in $\mathcal{X}$ because outliers have very small probabilities and contribute very little. Instead, we set
+    \begin{equation*}
+      P(i,j) = \frac{P(i\vert j)+P(j\vert i)}{2n}
+    \end{equation*}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The Crowding Problem}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item High-dimensional space is very strange
+        \item Not enough space in 2d to accurately represent high-d space
+        \item \textbf{Geometric intuition fails disastrously}
+        \item Consider two ``hyper''-spheres, of radius $r$ and $r-\delta$
+        \item Ratio of volumes:
+        \begin{equation*}
+          \lim_{d\rightarrow \infty}\frac{r^d-(r-\delta)^d}{r^d}=1
+        \end{equation*}
+        \pause
+        \item Volume concentrates around the edge!
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Addressing the Crowding Problem}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Normal distribution is quite "tight"
+        \item Concentrates mass towards middle
+        \item "Pulls" points together
+        \item Instead, use a distribution with long "tails"
+        \item Student's $t$-distribution
+        \begin{equation*}
+          f(x \mid \nu) = \frac{\Gamma\!\left(\frac{\nu + 1}{2}\right)}{\sqrt{\nu \pi}\,\Gamma\!\left(\frac{\nu}{2}\right)}\left(1 + \frac{x^{2}}{\nu}\right)^{-\frac{\nu + 1}{2}}
+        \end{equation*}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{normal-vs-t}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Finding the Optimal Map}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item To find the optimal positions of the points in $\mathcal{Y}$ we minimise the cost function by iterating gradient descent
+        \begin{equation*}
+          y^* \leftarrow y^*-\alpha\frac{\partial C}{\partial y}
+        \end{equation*}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{gradient}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Perplexity}
+  \begin{itemize}
+    \item tSNE has one free parameter, the variance of the conditional probabilities $P$ in $\mathcal{X}$
+    \item Not the same for each data point due to varying density
+    \item We don't set this directly, but instead set a parameter called the Perplexity
+    \item Perplexity essentially sets the nunber of effective neigbours by controlling the variances for each data point
+    \item Values of 5 to 50 are typical
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Examples}
+  \begin{columns}
+    \begin{column}{0.38\textwidth}
+      \begin{center}
+        \includegraphics[width=0.5\textwidth]{digits.png}
+      \end{center}
+    \end{column}
+    \begin{column}{0.58\textwidth}
+      \only<1>{Perplexity=1\\\includegraphics[width=\textwidth]{tSNEdigitsp1.png}}
+      \only<2>{Perplexity=30\\\includegraphics[width=\textwidth]{tSNEdigitsp30.png}}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+
+
+\begin{frame}{Words of Caution about TSNE}
+  \begin{itemize}
+    \item "With four parameters I can fit an elephant, and with five I can make him wiggle his trunk." (John von Neumann)
+    \item In the general case it is impossible for tSNE or similar methods to completely accurately reflect the relationships in the data
+    \item Simply not enough space in 2d
+    \item (Very) critical article by Chari \& Pachter, PLOS Comp Bio 21(11), e1013655 (2023) is worth reading
+    \item It is tempting - but probably not a good idea to cluster on the output of tSNE
+    \item My advice: tSNE is a very useful exploratory tool, that can be used to guide further exploration, and potentially to generate hypotheses.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Alternatives to tSNE}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item UMAP: Uniform Manifold Approximation and Projection
+        \item Same goal as tSNE - low-d representation, but mathematically \textbf{very} different
+        \item Aims to preserve data \textbf{topology}
+        \item Mathematically \textbf{much} more challenging
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+        \includegraphics[width=\textwidth]{umapvstsne}
+
+        [arXiv:1802.03426v3, Figure 4]
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{The Variational Autoencoder}
+\begin{frame}{The Variational Autoencoder}
+  \begin{itemize}
+    \item tSNE is an example of a nonlinear \textit{embedding}
+    \item Let's us now consider another type of embedding
+    \item Variational Autoencoders are a core building block for a lot of modern AI
+    \item They combine a low-dimensional embedding with a generative model that allows us to produce new samples of our data
+    \item To understand them, first some background
+  \end{itemize}
+\end{frame}
+
+\subsection{A Brief Explanation of Neural Networks}
+
+\begin{frame}{Neural Networks}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Neural networks are learning methods loosely inspired by how the brain works
+        \item Large number of artificial neurons connected together in layers
+        \item Described by large numbers of free parameters
+        \item Learning is done by tuning the parameters using large numbers of examples of the task we want to learn
+        \item They are Universal Approximators
+        \item Any sufficiently large neural network can learn to perform any task
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{./neuralnet}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Artificial Neurons}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{./neuron}
+      \begin{equation*}
+        \mathrm{output} = f\left(\sum_{i\in \mathrm{inputs}} w_i\times \mathrm{input}_i + c\right)
+      \end{equation*}
+      [Outputs can go to multiple places]
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{./activations}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+\begin{frame}{Propagation through a Neural Network}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Data is presented as the input to the network
+        \item It propagates through the layers of neurons to the output
+        \item The output could be:
+        \begin{itemize}
+          \item A classification of the input
+          \item A decision based on the input
+          \item A derivative of the data
+        \end{itemize}
+        \item How do we control this?
+        \item Need to make sure inputs, output are the right size
+        \item \textbf{Need to choose the parameters to get the desired output}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{./neuralnet}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Loss Functions}
+  \begin{itemize}
+    \item Consider a task that maps some set of $N$ inputs on to some set of outputs
+    \begin{itemize}
+      \item Images $\rightarrow$ \{Cats, Dogs, Cows, Sheep\}
+      \item Medical Test $\rightarrow$ \{Healthy, Disease\}
+    \end{itemize}
+    \item For some of the $N$ inputs we know what the output should be
+    \item We \textbf{train} the model by selecting the parameters of the neurons such that the output of the network matches the known outputs
+    \item Define a loss function $L(\mathrm{output}, \mathrm{expected\_output})$
+    \item Measures difference between output and expected output
+    \item Find the neuron parameters that minimise the loss function
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Loss Functions - some examples}
+  Given \{inputs,output,expected\_outputs\} = $\{\bx_i,\by_i,\by^*_i\}_{i=1}^N$
+
+      \begin{block}{Least Squares Loss}
+        $$L(\by,\by^*) = \sum_i \|\by_i-\by^*_i\|^2$$
+      \end{block}
+
+      \begin{block}{Binary Cross Entropy}
+        $$L(\by,\by^*) = -\frac{1}{N} \sum_{i,j} \left[y_{ij}^* \log(y_{ij}) + (1 - y_{ij}^*) \log(1 - y_{ij}) \right]$$
+      \end{block}
+   
+\end{frame}
+
+\begin{frame}{Learning by Backpropagation of Errors}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item The inputs and the expected outputs don't depend on the neuron parameters
+        \item The outputs do.
+        \item The Loss function therefore depends implicity on the neuron parameters
+        \item We want find the neuron parameters that minimise $L$
+        \item A form of gradient descent -- backpropagation
+        \begin{equation*}
+          y^* \leftarrow y^*-\alpha\frac{\partial C}{\partial y}
+        \end{equation*}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{gradient}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Backpropagation: The Core Idea}
+  Backpropagation efficiently computes gradients of the loss with respect to all parameters using the chain rule. Define $\delta^{(l)} = \partial L / \partial z^{(l)}$. Then the error signal is propagated from output to input:
+  \begin{align}
+  \delta^{(L)} &= \nabla_{z^{(L)}} L, \\
+  \delta^{(l)} &= (W^{(l+1)})^T\,\delta^{(l+1)} \odot f'(z^{(l)}),\\
+  \frac{\partial L}{\partial W^{(l)}} &= \delta^{(l)} (a^{(l-1)})^T, \quad \frac{\partial L}{\partial b^{(l)}} = \delta^{(l)}.
+  \end{align}
+  This yields all gradients in time proportional to one forward pass.
+\end{frame}
+
+\begin{frame}{Autoencoders}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item An autoencoder (AE) compresses an input $x$ into a low-dimenional representation (a latent code) $z$
+via an encoder, then reconstructs $\hat{x}$ via a decoder.
+        \item It is trained to reconstruct its input (ie $y^*=x$)
+        \begin{equation*} 
+          \mathcal{L}_{AE}(x) = \|y-x\|^2
+        \end{equation*}
+        \item Learns compact low-d representations $z$
+        \item In principle can "move around" $z$, decode and generate samples
+        \item But "latent space" tends to be irregular and sampling can produce nonsense
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \includegraphics[width=\textwidth]{autoencoder}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+\begin{frame}{The Variational Autoencoder}
+  \begin{itemize}
+    \item The irregularity of the latent space means that autoencoders are not true generative models
+    \item They can reconstruct their inputs well
+    \item But sampling from a random location in $z$ will probably produce nonsense
+    \item The variational autoencoder is designed to overcome this
+    \item Models the data and the latent space probabilistically
+    \item Constrain the latent space such that the probability of sampling from the latent space and then decoding is the same as sampling from the data distribution
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Variational Inference}
+  \begin{itemize}
+    \item Consider the distribution of latent variables $z$ given input $z$ $p(z\mid x)$
+    \item We cannot find this exactly in most cases: finite samples and very complex high dimensional distributions
+    \item Instead, define a distribution $\{q_\phi(z\mid x)\}$
+    \item Choose $\phi$ to make $q_\phi(z\mid x)=P(z\mid x)$
+    \item This effectively represents the \textit{encoder}
+    \item Then introduce a second distribution $p_\theta(x\mid z)$ - the decoder
+    \item We want to acheive two things
+    \begin{itemize}
+      \item Reconstruct the inputs at the output
+      \item Make the latent space "smooth" and well-behaved
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{The VAE Loss}
+  We skip a fair amount of mathematical manipulations and come straight to the result
+  
+  \begin{equation*}
+    \mathcal{L}(x) = \underbrace{\mathbb{E}_{q_\phi(z\mid x)}[\log p_\theta(x\mid z)]}_{\text{reconstruction}} - \underbrace{\mathrm{KL}\big(q_\phi(z\mid x)\,\Vert\,p(z)\big)}_{\text{regularization}}.
+  \end{equation*}
+  \begin{itemize}
+    \item The first term rewards accurate reconstructions; the second keeps the approximate posterior close to the prior, shaping a well-structured latent space.
+    \item Typically assume a normal distribution for $x$ and $z$ which means this can be expressed in a clean analytic form.
+    \item This also pushes $z$ to be normally distributed
+  \end{itemize}
+  \end{frame}
+
+\begin{frame}{VAE in Pictures}
+  \begin{center}
+    \includegraphics[width=0.7\textwidth]{autoencoder}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}{Convolutions}
+  \begin{columns}
+    \begin{column}{0.48\textwidth}
+      \begin{itemize}
+        \item Diagrams have shown so-called fully connected networks
+        \item Very flexible but inefficient when data has some structure
+        \item For images and signals, common to use convolutional networks
+        \item Early layers define \textit{filters} that are learned
+        \item Filters typically correspond to common structures
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{center}
+        \includegraphics[width=0.7\textwidth]{convlayer1}
+
+        \includegraphics[width=\textwidth]{convlayer2}
+      \end{center}
+      These files are original work of Aphex34 and are licensed under the \href{https://creativecommons.org/licenses/by-sa/4.0/deed.en}{Creative Commons Attribution-Share Alike 4.0} International license.
+
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+\begin{frame}{Key Takeaways}
+\begin{itemize}
+  \item Trained to reconstruct like an autoencoder, but with an explicit probabilistic generative model
+  \item Latent space has a well-define structure which enables proper sampling and controlled generation
+  \item Backprop trains deep networks efficiently
+  \item Training balances reconstruction with distribution matching
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Further Reading}
+\begin{itemize}
+  \item Kingma, D.P. and Welling, M. (2014). \emph{Auto-Encoding Variational Bayes} (ICLR).
+  \item Rezende, D.J., Mohamed, S. and Wierstra, D. (2014). \emph{Stochastic Backpropagation and Approximate Inference in Deep Generative Models} (ICML).
+  \item Doersch, C. (2016). \emph{Tutorial on Variational Autoencoders}. arXiv:1606.05908.
+  \item Kingma, D.P. and Ba, J. (2015). \emph{Adam: A Method for Stochastic Optimization}. ICLR.
+\end{itemize}
+\end{frame}
+
+\end{document}
